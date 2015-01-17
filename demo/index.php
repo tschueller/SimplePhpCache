@@ -2,7 +2,7 @@
 
 include "../class/SimplePhpCache.php";
 
-// Set the cacheBaseDir (if needed). Default is "./";
+// Set the cacheBaseDir (if needed). Default is the system temp directory.
 //SimplePhpCache::$cacheBaseDir = "./";
 
 // Set the max cache time (if needed). Default is 86400;
