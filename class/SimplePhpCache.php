@@ -9,59 +9,59 @@ use \RuntimeException;
 
 class SimplePhpCache
 {
-	 /** Cache id from the current started cache. */
-	private static $startedCache = null;
+     /** Cache id from the current started cache. */
+    private static $startedCache = null;
 
-	/** The cached content. */
-	private static $cacheContent = null;
+    /** The cached content. */
+    private static $cacheContent = null;
 
-	/** The cache base directory. */
-	public static $cacheBaseDir = null;
+    /** The cache base directory. */
+    public static $cacheBaseDir = null;
 
-	/** The max cache time. */
-	public static $maxCacheTime = 86400;
+    /** The max cache time. */
+    public static $maxCacheTime = 86400;
 
-	/**
-	 * Constructor
-	 */
-	private function __construct()
-	{
-	    SimplePhpCache::$cacheBaseDir = sys_get_temp_dir();
-	}
+    /**
+     * Constructor
+     */
+    private function __construct()
+    {
+        SimplePhpCache::$cacheBaseDir = sys_get_temp_dir();
+    }
 
     /**
      * Start the HTML output caching.
      *
      * @param string $id
-     * 			  The cache identifyer.
+     *               The cache identifyer.
      * @param boolean $refresh
-     * 			  Refresh the cache. Optional, default is false
+     *               Refresh the cache. Optional, default is false
      * @return boolean Returned true if no cache is available otherwise false
      * @throws RuntimeException
-     * 			  When the cache is already started
+     *               When the cache is already started
      */
     public static function initHTMLCaching($id, $refresh = false)
     {
-    	if (self::$startedCache != null)
-    	{
-    		throw new RuntimeException("Cache is already started");
-    	}
+        if (self::$startedCache != null)
+        {
+            throw new RuntimeException("Cache is already started");
+        }
 
-    	self::$startedCache = $id;
-    	self::$cacheContent = null;
+        self::$startedCache = $id;
+        self::$cacheContent = null;
 
-		$cacheFile = self::getCacheDir() . "/" . self::getFilename($id);
+        $cacheFile = self::getCacheDir() . "/" . self::getFilename($id);
 
-		// Check if the cached file is older then the configured time
-		if(!$refresh && file_exists($cacheFile) &&
-				(time() - filemtime($cacheFile)) < self::$maxCacheTime)
-		{
-			self::$cacheContent = file_get_contents($cacheFile);
-			return false;
-		}
+        // Check if the cached file is older then the configured time
+        if(!$refresh && file_exists($cacheFile) &&
+                (time() - filemtime($cacheFile)) < self::$maxCacheTime)
+        {
+            self::$cacheContent = file_get_contents($cacheFile);
+            return false;
+        }
 
-		ob_start();
-		return true;
+        ob_start();
+        return true;
     }
 
 
@@ -69,32 +69,32 @@ class SimplePhpCache
      * Stops the HTML output caching and returned the cached content.
      *
      * @param string $id
-     * 			  The cache identifyer.
+     *               The cache identifyer.
      * @throws RuntimeException
-     * 			  When the cache is not started
+     *               When the cache is not started
      */
     public static function finishHTMLCaching($id)
     {
-    	if (self::$startedCache != $id)
-    	{
-    		throw new RuntimeException("Cache isn't started");
-    	}
+        if (self::$startedCache != $id)
+        {
+            throw new RuntimeException("Cache isn't started");
+        }
 
-    	if (self::$cacheContent != null)
-    	{
-    		$content = self::$cacheContent;
-    	}
-    	else
-    	{
-	    	$cacheFile = self::getCacheDir() . "/" . self::getFilename($id);
-	    	$content = ob_get_clean();
-	    	if (file_put_contents($cacheFile, $content, LOCK_EX) === false)
-	    		throw new RuntimeException("Error writing cache: '$cacheFile'");
-    	}
+        if (self::$cacheContent != null)
+        {
+            $content = self::$cacheContent;
+        }
+        else
+        {
+            $cacheFile = self::getCacheDir() . "/" . self::getFilename($id);
+            $content = ob_get_clean();
+            if (file_put_contents($cacheFile, $content, LOCK_EX) === false)
+                throw new RuntimeException("Error writing cache: '$cacheFile'");
+        }
 
-    	self::$startedCache = null;
+        self::$startedCache = null;
 
-    	return $content;
+        return $content;
     }
 
 
@@ -103,56 +103,56 @@ class SimplePhpCache
      * Start the variable caching.
      *
      * @param string $id
-     * 			  The cache identifyer.
+     *               The cache identifyer.
      * @param boolean $refresh
-     * 			  Refresh the cache. Option, default is false
+     *               Refresh the cache. Option, default is false
      * @return boolean Returned true if no cache is available otherwise false
      * @throws RuntimeException
-     * 			  When the cache is already started
+     *               When the cache is already started
      */
     public static function initVarCaching($id, $refresh = false)
     {
-    	if (self::$startedCache != null)
-    	{
-    		throw new RuntimeException("Cache is already started");
-    	}
+        if (self::$startedCache != null)
+        {
+            throw new RuntimeException("Cache is already started");
+        }
 
-    	self::$startedCache = $id;
+        self::$startedCache = $id;
 
-    	$cacheFile = self::getCacheDir() . "/" . self::getFilename($id);
+        $cacheFile = self::getCacheDir() . "/" . self::getFilename($id);
 
-    	// Check if the cached file is older then the configured time
-    	if(!$refresh && file_exists($cacheFile) &&
-    			(time() - filemtime($cacheFile)) < self::$maxCacheTime)
-    	{
-    		self::$cacheContent = unserialize(file_get_contents($cacheFile));
-    		return false;
-    	}
+        // Check if the cached file is older then the configured time
+        if(!$refresh && file_exists($cacheFile) &&
+                (time() - filemtime($cacheFile)) < self::$maxCacheTime)
+        {
+            self::$cacheContent = unserialize(file_get_contents($cacheFile));
+            return false;
+        }
 
-    	return true;
+        return true;
     }
 
     /**
      * Set the variable caching data.
      *
      * @param string $id
-     * 			  The cache identifyer.
+     *               The cache identifyer.
      * @param mixed $data
-     * 			  The data to cache.
+     *               The data to cache.
      * @throws RuntimeException
      */
     public static function setVarCaching($id, $data)
     {
-    	if (self::$startedCache != $id)
-    	{
-    		throw new RuntimeException("Cache is not started");
-    	}
+        if (self::$startedCache != $id)
+        {
+            throw new RuntimeException("Cache is not started");
+        }
 
-    	$cacheFile = self::getCacheDir() . "/" . self::getFilename($id);
+        $cacheFile = self::getCacheDir() . "/" . self::getFilename($id);
 
-    	self::$cacheContent = $data;
-    	if (file_put_contents($cacheFile, serialize($data), LOCK_EX) === false)
-    		throw new RuntimeException("Error writing cache: '$cacheFile'");
+        self::$cacheContent = $data;
+        if (file_put_contents($cacheFile, serialize($data), LOCK_EX) === false)
+            throw new RuntimeException("Error writing cache: '$cacheFile'");
     }
 
 
@@ -160,20 +160,20 @@ class SimplePhpCache
      * Stops the variable caching and returned the cached content.
      *
      * @param string $id
-     * 			  The cache identifyer.
+     *               The cache identifyer.
      * @throws RuntimeException
-     * 			  When the cache is not started
+     *               When the cache is not started
      */
     public static function finishVarCaching($id)
     {
-    	if (self::$startedCache != $id)
-    	{
-    		throw new RuntimeException("Cache isn't started");
-    	}
+        if (self::$startedCache != $id)
+        {
+            throw new RuntimeException("Cache isn't started");
+        }
 
-    	self::$startedCache = null;
+        self::$startedCache = null;
 
-    	return self::$cacheContent;
+        return self::$cacheContent;
     }
 
 
@@ -200,7 +200,7 @@ class SimplePhpCache
      * @param string $id
      *            The cache id
      * @return string
-     * 			  The cache file name.
+     *               The cache file name.
      */
     private static function getFilename($id)
     {
@@ -212,7 +212,7 @@ class SimplePhpCache
      * Fix the path (under windows).
      *
      * @param string $path
-     * 			  The dir path to fix.
+     *               The dir path to fix.
      * @return string The fixed path.
      */
     private static function fixPath($path)
