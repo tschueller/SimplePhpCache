@@ -178,9 +178,9 @@ class SimplePhpCache
 
 
     /**
-     * Clear the complete cache.
+     * Clear the complete cacheor only for the given id.
      */
-    public static function clearCache()
+    public static function clearCache($id = null)
     {
         $cacheDir = self::getCacheDir();
         $scanResult = scandir($cacheDir);
@@ -188,7 +188,9 @@ class SimplePhpCache
         {
             if (preg_match("/^.*\.(cache)$/i", $fileName))
             {
-               unlink("$cacheDir/$fileName");
+                if ($id == null || $fileName == self::getFilename($id)) {
+                    unlink("$cacheDir/$fileName");
+                }
             }
         }
     }
