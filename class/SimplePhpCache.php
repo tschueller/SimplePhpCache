@@ -170,7 +170,7 @@ class SimplePhpCache
 
 
     /**
-     * Clear the complete cacheor only for the given id.
+     * Clear the complete cache or only for the given id.
      */
     public static function clearCache($id = null)
     {
