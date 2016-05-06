@@ -22,14 +22,6 @@ class SimplePhpCache
     public static $maxCacheTime = 86400;
 
     /**
-     * Constructor
-     */
-    private function __construct()
-    {
-        SimplePhpCache::$cacheBaseDir = sys_get_temp_dir();
-    }
-
-    /**
      * Start the HTML output caching.
      *
      * @param string $id
@@ -232,7 +224,9 @@ class SimplePhpCache
      */
     private static function getCacheDir()
     {
-
+        if (self::$cacheBaseDir == null) {
+            self::$cacheBaseDir = sys_get_temp_dir();
+        }
         $dir = self::fixPath(self::$cacheBaseDir) . "/.simplePhpCache";
         if (!is_dir($dir) && !mkdir($dir, 0770, true))
         {
