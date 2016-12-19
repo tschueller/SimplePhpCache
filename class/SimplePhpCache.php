@@ -5,8 +5,6 @@
  * Licensed under the MIT license.
  */
 
-use \RuntimeException;
-
 class SimplePhpCache
 {
      /** Cache id from the current started cache. */
@@ -106,7 +104,7 @@ class SimplePhpCache
     {
         if (self::$startedCache != null)
         {
-            throw new RuntimeException("Cache is already started");
+            throw new RuntimeException("A cache is already started: " . self::$startedCache);
         }
 
         self::$startedCache = $id;
@@ -170,23 +168,40 @@ class SimplePhpCache
 
 
     /**
-     * Clear the complete cache or only for the given id.
+     * Clear the complete cache or only for the given id or the given idPrefix.
+     *
+     * @param string $id
+     *            The cache identifyer
+     * @param string $idPrefix
+     *            The cache identifyer prefix
      */
-    public static function clearCache($id = null)
-    {
+    public static function clearCache($id = null, $idPrefix = null) {
+        if ($id) {
+            $pattern = self::getFilename($id);
+        } else if ($idPrefix) {
+            $pattern = $idPrefix . "*.cache";
+        } else {
+            $pattern = "*.cache";
+        }
         $cacheDir = self::getCacheDir();
-        $scanResult = scandir($cacheDir);
-        foreach ($scanResult as $fileName)
-        {
-            if (preg_match("/^.*\.(cache)$/i", $fileName))
-            {
-                if ($id == null || $fileName == self::getFilename($id)) {
-                    unlink("$cacheDir/$fileName");
-                }
-            }
+        $scanResult = glob($cacheDir."/".$pattern);
+        foreach ($scanResult as $fileName) {
+            unlink("$fileName");
         }
     }
 
+    /**
+     * Return the count of all cache files or for the given prefix.
+     *
+     * @param string $idPrefix
+     *            The cache identifyer prefix
+     * @return number
+     *            The cache file count.
+     */
+    public static function getCacheCount($idPrefix = "") {
+        $pattern = $idPrefix . "*.cache";
+        return $cacheFileCount = count(glob(self::getCacheDir()."/".$pattern));
+    }
 
     /**
      * Returns the cache id.
@@ -224,12 +239,11 @@ class SimplePhpCache
      */
     private static function getCacheDir()
     {
-        if (self::$cacheBaseDir == null) {
+       if (self::$cacheBaseDir == null) {
             self::$cacheBaseDir = sys_get_temp_dir();
         }
         $dir = self::fixPath(self::$cacheBaseDir) . "/.simplePhpCache";
-        if (!is_dir($dir) && !mkdir($dir, 0770, true))
-        {
+        if (!is_dir($dir) && !mkdir($dir, 0770, true)) {
             throw new RuntimeException("Can not create cache directory: '$dir'");
         }
         return $dir;
