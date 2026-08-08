@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/../class/SimplePhpCache.php';
+
 use PHPUnit\Framework\TestCase;
 
 class SimplePhpCacheTest extends TestCase

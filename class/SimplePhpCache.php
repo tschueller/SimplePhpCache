@@ -115,6 +115,9 @@ class SimplePhpCache
         if(!$refresh && file_exists($cacheFile) &&
                 (time() - filemtime($cacheFile)) < self::$maxCacheTime)
         {
+            // allowed_classes=false prevents PHP Object Injection: no class constructors
+            // or magic methods (__wakeup, __destruct) are invoked during deserialization.
+            // Arrays and scalar values are unaffected; PHP objects become __PHP_Incomplete_Class.
             self::$cacheContent = unserialize(file_get_contents($cacheFile), ['allowed_classes' => false]);
             return false;
         }
@@ -241,7 +244,7 @@ class SimplePhpCache
      *
      * @return string The cache directory.
      * @throws RuntimeException
-     *            When the cache directory creation falied.
+     *            When the cache directory creation failed.
      */
     private static function getCacheDir()
     {
