@@ -15,7 +15,8 @@ Use these files first when relevant:
 - tests/ for behavior checks (PHPUnit)
 - CHANGELOG.md for release notes
 - TODO.md for deferred or optional work
-- SECURITY.md for vulnerability handling and known risk notes
+- SECURITY.md for vulnerability reporting policy
+- docs/security-notes.md for known risks, hardening notes, and security findings
 - .github/workflows for CI behavior
 
 ## Core Working Rules
