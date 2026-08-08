@@ -1,19 +1,21 @@
 # Agent Instructions
 
 ## Project Overview
-This repository contains a small PHP cache library that is actively used in production.
-The codebase has legacy parts, but must be maintained pragmatically and safely.
-Goal: modern baseline with minimal overhead, strong backward compatibility, and clear documentation.
+This repository contains `SimplePhpCache`, a small PHP 8.2+ file-based cache library
+for HTML output and variable caching. It is actively used in production.
+The codebase has legacy origins (PHP 5.2 era), but is maintained with a focus on
+pragmatic modernization, strong backward compatibility, and clear documentation.
+Goal: modern baseline with minimal overhead and Packagist-readiness.
 
 ## Source of Truth
 Use these files first when relevant:
-- README.md for runtime behavior and documented API
+- README.md for runtime behavior, documented API, and migration notes
 - composer.json for dependencies, scripts, and autoloading
-- src for implementation
-- tests for behavior checks
+- class/ for implementation (SimplePhpCache.php)
+- tests/ for behavior checks (PHPUnit)
 - CHANGELOG.md for release notes
 - TODO.md for deferred or optional work
-- SECURITY.md for vulnerability handling
+- SECURITY.md for vulnerability handling and known risk notes
 - .github/workflows for CI behavior
 
 ## Core Working Rules
@@ -30,11 +32,12 @@ Use these files first when relevant:
 Implement only the necessary baseline improvements:
 - clean folder structure
 - minimal project metadata and documentation
-- Composer setup and package readiness
-- basic CI and quality checks
+- Composer setup and Packagist readiness (composer validate, license, keywords)
+- basic CI and quality checks (PHPStan level 3, PHPUnit)
 - basic unit tests only for core behavior
 
 Do not add large refactorings or extensive test suites unless explicitly requested.
+Deferred improvements are tracked in TODO.md.
 
 ## Versioning and Tagging Policy
 - Preserve current state as an initial zero-series baseline tag so it can be referenced later.

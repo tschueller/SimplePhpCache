@@ -115,7 +115,7 @@ class SimplePhpCache
         if(!$refresh && file_exists($cacheFile) &&
                 (time() - filemtime($cacheFile)) < self::$maxCacheTime)
         {
-            self::$cacheContent = unserialize(file_get_contents($cacheFile));
+            self::$cacheContent = unserialize(file_get_contents($cacheFile), ['allowed_classes' => false]);
             return false;
         }
 
@@ -179,14 +179,14 @@ class SimplePhpCache
         if ($id) {
             $pattern = self::getFilename($id);
         } else if ($idPrefix) {
-            $pattern = $idPrefix . "*.cache";
+            $pattern = self::sanitizeIdPrefix($idPrefix) . "*.cache";
         } else {
             $pattern = "*.cache";
         }
         $cacheDir = self::getCacheDir();
-        $scanResult = glob($cacheDir."/".$pattern);
+        $scanResult = glob($cacheDir . "/" . $pattern) ?: [];
         foreach ($scanResult as $fileName) {
-            unlink("$fileName");
+            unlink($fileName);
         }
     }
 
@@ -199,8 +199,14 @@ class SimplePhpCache
      *            The cache file count.
      */
     public static function getCacheCount($idPrefix = "") {
-        $pattern = $idPrefix . "*.cache";
-        return $cacheFileCount = count(glob(self::getCacheDir()."/".$pattern));
+        $pattern = self::sanitizeIdPrefix($idPrefix) . "*.cache";
+        return count(glob(self::getCacheDir() . "/" . $pattern) ?: []);
+    }
+
+    /** Strip glob-unsafe characters from a cache ID prefix. */
+    private static function sanitizeIdPrefix($prefix)
+    {
+        return preg_replace('/[^a-zA-Z0-9_\-.]/', '', (string) $prefix);
     }
 
     /**
