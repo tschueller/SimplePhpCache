@@ -22,6 +22,11 @@ Deferred improvements — implement when explicitly requested or when capacity a
 - **[MEDIUM] Add proper return types and parameter types to all public methods**
   Current code has no type declarations. Requires PHP 8.x syntax review.
   Non-breaking as long as callers pass correct types.
+  Prerequisite for raising PHPStan level beyond 3.
+
+- **[MEDIUM] Raise PHPStan analysis level (target: 6–8)**
+  Currently level 3. Level 10 reveals 16 findings, all related to missing type declarations.
+  Can only be raised sustainably after type declarations are added.
 
 - **[MEDIUM] Implement PSR-16 SimpleCache interface**
   Makes the library interoperable with PSR-16 consumers. Requires namespace + new
