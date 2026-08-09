@@ -26,7 +26,7 @@
     "scripts": {
         "lint": "php -l class/SimplePhpCache.php",
         "test": "phpunit --testdox",
-        "analyse": "phpstan analyse class/ --level=3 --no-progress",
+        "analyse": "phpstan analyse --no-progress",
         "check": ["@lint", "@analyse", "@test"]
     }
 }

@@ -118,7 +118,8 @@ class SimplePhpCache
             // allowed_classes=false prevents PHP Object Injection: no class constructors
             // or magic methods (__wakeup, __destruct) are invoked during deserialization.
             // Arrays and scalar values are unaffected; PHP objects become __PHP_Incomplete_Class.
-            self::$cacheContent = unserialize(file_get_contents($cacheFile), ['allowed_classes' => false]);
+            $raw = file_get_contents($cacheFile);
+            self::$cacheContent = ($raw !== false) ? unserialize($raw, ['allowed_classes' => false]) : null;
             return false;
         }
 
