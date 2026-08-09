@@ -1,7 +1,7 @@
 SimplePhpCache
 ==============
 
-A very simple PHP caching system which can cache HTML output or variables. 
+A very simple PHP caching system which can cache HTML output or variables.
 
 Requirements
 ------------
@@ -25,7 +25,7 @@ Set the max cache time in seconds (Optional, default is 86400 (1 day)):
 
 Cache HTML
 ----------
-	<?php	
+	<?php
 	$cacheName = "html_cache_1";
 	if (SimplePhpCache::initHTMLCaching($cacheName)) {
 	?>

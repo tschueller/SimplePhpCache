@@ -29,13 +29,12 @@ Use these files first when relevant:
 - Use explicit visibility on new methods and properties.
 - Apply a security-first mindset when touching cache keys, file paths, serialization, and user-controlled input.
 
-## Modernization Scope
-Implement only the necessary baseline improvements:
-- clean folder structure
-- minimal project metadata and documentation
-- Composer setup and Packagist readiness (composer validate, license, keywords)
-- basic CI and quality checks (PHPStan level 3, PHPUnit)
-- basic unit tests only for core behavior
+## Project Structure and Conventions
+- Source: `class/SimplePhpCache.php` (classmap autoloading, no namespace)
+- Tests: `tests/` (PHPUnit 11, PHP 8.2+)
+- CI: `.github/workflows/ci.yml` (PHP 8.2 / 8.3 / 8.4)
+- Static analysis: PHPStan level 3 (`phpstan.neon`)
+- Quality scripts: `composer lint | test | analyse | check`
 
 Do not add large refactorings or extensive test suites unless explicitly requested.
 Deferred improvements are tracked in TODO.md.
