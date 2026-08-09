@@ -27,6 +27,10 @@
         "lint": "php -l class/SimplePhpCache.php",
         "test": "phpunit --testdox",
         "analyse": "phpstan analyse --no-progress",
-        "check": ["@lint", "@analyse", "@test"]
+        "check": ["@lint", "@analyse", "@test"],
+        "demo": [
+            "Composer\\Config::disableProcessTimeout",
+            "php -S 127.0.0.1:8000 -t . demo/index.php"
+        ]
     }
 }

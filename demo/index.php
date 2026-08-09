@@ -1,6 +1,6 @@
 <?php
 
-include "../class/SimplePhpCache.php";
+require_once __DIR__ . '/../vendor/autoload.php';
 
 // Set the cacheBaseDir (if needed). Default is the system temp directory.
 //SimplePhpCache::$cacheBaseDir = "./";
@@ -29,7 +29,7 @@ if (isset($_REQUEST["clearCache"]))
     <button onclick="window.location.href=window.location.href+'?clearCache=true'">Clear Cache</button>  
     <hr/>
     
-<?
+<?php
   
     /*** Start the html output cache ***/
     $cacheName = "html_cache_1";
@@ -40,7 +40,7 @@ if (isset($_REQUEST["clearCache"]))
         <h2>HTML Output Cache</h2>
         <p>Name: <?=$cacheName?></p>
         <p><?=$cacheDate?></p>
-<? 
+<?php 
     }
     echo SimplePhpCache::finishHTMLCaching($cacheName);
     
