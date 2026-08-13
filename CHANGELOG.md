@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Changed
+- **BREAKING**: Variable cache storage switched from PHP serialization to JSON payloads with `SPCJSON1:` marker.
+  Caching PHP objects is no longer supported.
+- Legacy serialized variable cache files are auto-detected and migrated on first successful read.
+  Unsupported legacy object payloads are dropped and treated as cache miss.
+
+### Added
+- Additional tests for large variable payloads with multiline text and legacy cache migration paths.
+
 ## [0.2.0] - 2026-08-13
 
 ### Changed

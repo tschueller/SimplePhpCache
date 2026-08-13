@@ -46,6 +46,12 @@ class SimplePhpCacheTest extends TestCase
         $r->getProperty('cacheContent')->setValue(null, null);
     }
 
+    private function getCacheFilePathForId(string $id): string
+    {
+        $cacheSubDir = $this->testCacheDir . '/.simplePhpCache';
+        return $cacheSubDir . '/' . urlencode(str_replace('\\', '/', $id)) . '-' . md5($id) . '.cache';
+    }
+
     // --- Variable caching ---
 
     public function testVarCachingMissOnFirstCall(): void
@@ -84,6 +90,80 @@ class SimplePhpCacheTest extends TestCase
 
         $result = SimplePhpCache::finishVarCaching($id);
         $this->assertEquals($data, $result);
+    }
+
+    public function testVarCachingLargePayloadAndMultilineTextRoundTrip(): void
+    {
+        $id = 'var_large_multiline';
+        $largeText = str_repeat("Line one\nLine two with umlaut äöü\r\n", 2000);
+        $largeList = range(1, 3000);
+        $data = [
+            'title' => 'Large payload',
+            'body' => $largeText,
+            'nested' => [
+                'rows' => array_map(
+                    static fn (int $n): array => [
+                        'id' => $n,
+                        'text' => "entry-{$n}",
+                        'active' => $n % 2 === 0,
+                    ],
+                    range(1, 500)
+                ),
+                'numbers' => $largeList,
+            ],
+        ];
+
+        SimplePhpCache::initVarCaching($id);
+        SimplePhpCache::setVarCaching($id, $data);
+        SimplePhpCache::finishVarCaching($id);
+        $this->resetStaticState();
+
+        $miss = SimplePhpCache::initVarCaching($id);
+        $this->assertFalse($miss);
+        $result = SimplePhpCache::finishVarCaching($id);
+
+        $this->assertSame($data, $result);
+    }
+
+    public function testLegacySerializedCacheIsAutoMigratedToJsonFormat(): void
+    {
+        $id = 'var_legacy_migrate';
+        $legacyData = ['legacy' => true, 'message' => "hello\nworld", 'size' => 12345];
+        $cacheFile = $this->getCacheFilePathForId($id);
+
+        SimplePhpCache::initVarCaching($id);
+        SimplePhpCache::setVarCaching($id, 'seed');
+        SimplePhpCache::finishVarCaching($id);
+        file_put_contents($cacheFile, serialize($legacyData), LOCK_EX);
+        $this->resetStaticState();
+
+        $miss = SimplePhpCache::initVarCaching($id);
+        $this->assertFalse($miss, 'Legacy payload should be read as a cache hit and migrated');
+        $result = SimplePhpCache::finishVarCaching($id);
+        $this->assertEquals($legacyData, $result);
+
+        $stored = file_get_contents($cacheFile);
+        $this->assertIsString($stored);
+        $this->assertStringStartsWith('SPCJSON1:', $stored);
+    }
+
+    public function testLegacySerializedObjectPayloadIsDroppedAndTreatedAsMiss(): void
+    {
+        $id = 'var_legacy_object';
+        $cacheFile = $this->getCacheFilePathForId($id);
+
+        SimplePhpCache::initVarCaching($id);
+        SimplePhpCache::setVarCaching($id, 'seed');
+        SimplePhpCache::finishVarCaching($id);
+
+        $legacyObject = new stdClass();
+        $legacyObject->name = 'legacy';
+        file_put_contents($cacheFile, serialize($legacyObject), LOCK_EX);
+        $this->resetStaticState();
+
+        $miss = SimplePhpCache::initVarCaching($id);
+        $this->assertTrue($miss, 'Legacy object payload is unsupported and should be treated as miss');
+        $this->assertFileDoesNotExist($cacheFile);
     }
 
     public function testVarCachingExpiredEntryTreatedAsMiss(): void

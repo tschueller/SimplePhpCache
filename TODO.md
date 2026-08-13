@@ -4,11 +4,6 @@ Deferred improvements — implement when explicitly requested or when capacity a
 
 ## High Priority
 
-- **[HIGH] Replace serialize/unserialize with JSON**
-  Switch `setVarCaching` / `finishVarCaching` to `json_encode`/`json_decode`.
-  Eliminates the deserialization surface entirely. Breaking change: objects cannot
-  be cached. Requires major version bump and migration note.
-
 - **[HIGH] Add namespace `Tschueller\SimplePhpCache`**
   Currently a global class. Adding a namespace is a breaking API change and requires
   a major version bump. Should be paired with moving to `src/` and PSR-4 autoloading.

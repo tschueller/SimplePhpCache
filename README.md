@@ -73,9 +73,14 @@ Migration
 
 **PHP version:** Minimum requirement is now PHP 8.2.
 
-**Object caching removed:** `unserialize()` now uses `['allowed_classes' => false']`
-to prevent PHP Object Injection. If you cached PHP objects, they will deserialize
-as `__PHP_Incomplete_Class`. Migrate to caching arrays or scalar values instead.
+**Variable cache format changed (breaking):** variable cache now uses a JSON-based
+payload format (`SPCJSON1:` marker + JSON) instead of PHP `serialize()`.
+Caching PHP objects is no longer supported.
+
+**Legacy cache migration:** existing serialized cache files are detected
+automatically. Supported legacy payloads (arrays/scalars) are read once and
+immediately rewritten in the new JSON format. Unsupported legacy object payloads
+are deleted and treated as cache miss.
 
 **Cache ID prefix sanitization:** Non-alphanumeric characters in the `$idPrefix`
 parameter of `clearCache()` and `getCacheCount()` are now stripped. If you relied

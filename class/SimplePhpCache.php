@@ -7,6 +7,9 @@
 
 class SimplePhpCache
 {
+    /** Prefix marker for JSON variable cache payloads. */
+    private const VAR_CACHE_PREFIX = "SPCJSON1:";
+
      /** Cache id from the current started cache. */
     private static $startedCache = null;
 
@@ -115,12 +118,26 @@ class SimplePhpCache
         if(!$refresh && file_exists($cacheFile) &&
                 (time() - filemtime($cacheFile)) < self::$maxCacheTime)
         {
-            // allowed_classes=false prevents PHP Object Injection: no class constructors
-            // or magic methods (__wakeup, __destruct) are invoked during deserialization.
-            // Arrays and scalar values are unaffected; PHP objects become __PHP_Incomplete_Class.
             $raw = file_get_contents($cacheFile);
-            self::$cacheContent = ($raw !== false) ? unserialize($raw, ['allowed_classes' => false]) : null;
-            return false;
+            if ($raw !== false) {
+                $decoded = self::decodeVarCachePayload($raw);
+                if ($decoded !== null) {
+                    self::$cacheContent = $decoded['data'];
+
+                    // Rewrite legacy payloads to the new JSON format on first successful read.
+                    if ($decoded['legacy']) {
+                        self::writeVarCachePayload($cacheFile, self::$cacheContent);
+                    }
+
+                    return false;
+                }
+
+                // Invalid or unsupported payload (for example legacy object cache):
+                // remove it and treat as cache miss so callers can regenerate safely.
+                @unlink($cacheFile);
+            }
+
+            return true;
         }
 
         return true;
@@ -144,9 +161,12 @@ class SimplePhpCache
 
         $cacheFile = self::getCacheDir() . "/" . self::getFilename($id);
 
+        if (self::containsObject($data)) {
+            throw new RuntimeException("Caching PHP objects is not supported in JSON variable cache");
+        }
+
         self::$cacheContent = $data;
-        if (file_put_contents($cacheFile, serialize($data), LOCK_EX) === false)
-            throw new RuntimeException("Error writing cache: '$cacheFile'");
+        self::writeVarCachePayload($cacheFile, $data);
     }
 
 
@@ -224,6 +244,89 @@ class SimplePhpCache
     private static function getFilename($id)
     {
         return urlencode(self::fixPath($id)) . "-" . md5($id) . ".cache";
+    }
+
+    /**
+     * Decode cache payload and identify whether it is legacy serialized data.
+     *
+     * @param string $raw
+     * @return array|null
+     */
+    private static function decodeVarCachePayload($raw)
+    {
+        if (str_starts_with($raw, self::VAR_CACHE_PREFIX)) {
+            $json = substr($raw, strlen(self::VAR_CACHE_PREFIX));
+            try {
+                return [
+                    'data' => json_decode($json, true, 512, JSON_THROW_ON_ERROR),
+                    'legacy' => false,
+                ];
+            } catch (JsonException $e) {
+                return null;
+            }
+        }
+
+        // Legacy payload fallback for automatic one-time migration.
+        if (preg_match('/^(?:a|s|i|d|b|N|O|C|R|r):/', $raw) === 1) {
+            $legacyData = @unserialize($raw, ['allowed_classes' => false]);
+            if ($legacyData === false && $raw !== 'b:0;') {
+                return null;
+            }
+
+            if (self::containsObject($legacyData)) {
+                return null;
+            }
+
+            return [
+                'data' => $legacyData,
+                'legacy' => true,
+            ];
+        }
+
+        return null;
+    }
+
+    /**
+     * Encode and persist variable cache payload in the JSON format.
+     *
+     * @param string $cacheFile
+     * @param mixed $data
+     * @throws RuntimeException
+     */
+    private static function writeVarCachePayload($cacheFile, $data)
+    {
+        try {
+            $payload = self::VAR_CACHE_PREFIX . json_encode($data, JSON_THROW_ON_ERROR);
+        } catch (JsonException $e) {
+            throw new RuntimeException("Error encoding variable cache payload: " . $e->getMessage(), 0, $e);
+        }
+
+        if (file_put_contents($cacheFile, $payload, LOCK_EX) === false) {
+            throw new RuntimeException("Error writing cache: '$cacheFile'");
+        }
+    }
+
+    /**
+     * Detect unsupported object values recursively.
+     *
+     * @param mixed $value
+     * @return boolean
+     */
+    private static function containsObject($value)
+    {
+        if (is_object($value)) {
+            return true;
+        }
+
+        if (is_array($value)) {
+            foreach ($value as $item) {
+                if (self::containsObject($item)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
 
