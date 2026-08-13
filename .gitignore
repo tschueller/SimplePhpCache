@@ -1,1 +1,19 @@
+# IDE / editor
 .project
+.vscode/
+.idea/
+
+# Composer
+/vendor/
+
+# PHPUnit
+.phpunit.result.cache
+.phpunit.cache/
+
+# Cache files generated during tests or demo
+*.cache
+/demo/*.cache
+
+# OS
+Thumbs.db
+.DS_Store

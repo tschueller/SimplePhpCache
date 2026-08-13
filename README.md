@@ -1,12 +1,12 @@
 SimplePhpCache
 ==============
 
-A very simple PHP caching system which can cache HTML output or variables. 
+A very simple PHP caching system which can cache HTML output or variables.
 
 Requirements
 ------------
 
-* PHP 5.2 or higher
+* PHP 8.2 or higher
 
 Preparation
 -----------
@@ -19,13 +19,13 @@ Set the cacheBaseDir (Optional, default is the system temp directory)
 
 	SimplePhpCache::$cacheBaseDir = "./";
 
-Set the max cache time in secods (Optional, default is  86400 (1 day));
+Set the max cache time in seconds (Optional, default is 86400 (1 day)):
 
 	SimplePhpCache::$maxCacheTime = 3600; // 1h
 
 Cache HTML
 ----------
-	<?php	
+	<?php
 	$cacheName = "html_cache_1";
 	if (SimplePhpCache::initHTMLCaching($cacheName)) {
 	?>
@@ -64,3 +64,19 @@ To refresh a special cache file, set in the init method as the second parameter 
 	// Variable
 	SimplePhpCache::initVarCaching($cacheName, true)
 
+---
+
+Migration
+---------
+
+### From pre-0.2 (PHP 5.x / 7.x)
+
+**PHP version:** Minimum requirement is now PHP 8.2.
+
+**Object caching removed:** `unserialize()` now uses `['allowed_classes' => false']`
+to prevent PHP Object Injection. If you cached PHP objects, they will deserialize
+as `__PHP_Incomplete_Class`. Migrate to caching arrays or scalar values instead.
+
+**Cache ID prefix sanitization:** Non-alphanumeric characters in the `$idPrefix`
+parameter of `clearCache()` and `getCacheCount()` are now stripped. If you relied
+on special characters in prefixes, update your prefix strings accordingly.
