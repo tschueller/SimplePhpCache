@@ -80,3 +80,13 @@ as `__PHP_Incomplete_Class`. Migrate to caching arrays or scalar values instead.
 **Cache ID prefix sanitization:** Non-alphanumeric characters in the `$idPrefix`
 parameter of `clearCache()` and `getCacheCount()` are now stripped. If you relied
 on special characters in prefixes, update your prefix strings accordingly.
+
+Release Process
+---------------
+
+When creating a version tag, add a matching section to `CHANGELOG.md` first:
+
+- `## [x.y.z] - YYYY-MM-DD`
+
+This repository includes a GitHub Actions guard that runs on tag pushes and fails
+if the corresponding changelog release section is missing.
