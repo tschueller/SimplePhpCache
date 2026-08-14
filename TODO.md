@@ -39,8 +39,12 @@ Deferred improvements — implement when explicitly requested or when capacity a
   Convenience method to check cache existence without starting a session.
 
 - **[LOW] Expand test suite**
-  Edge cases: empty string IDs, very long IDs, concurrent write simulation,
-  unreadable cache directory, Unicode in cache IDs.
+  Edge cases: empty string IDs, very long IDs, unreadable cache directory,
+  Unicode in cache IDs.
+
+- **[MEDIUM] Make cache writes atomic and protect readers from partial files**
+  `LOCK_EX` does not prevent readers from observing a file while it is being
+  written. Add an atomic-write strategy and concurrent-read/write tests.
 
 - **[LOW] Publish to Packagist**
   Run `composer validate --strict`, submit to packagist.org.

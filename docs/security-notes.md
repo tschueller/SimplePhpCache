@@ -10,12 +10,20 @@ They are treated as invalid, deleted, and handled as cache miss.
 
 **What this means for you:** cache arrays and scalar values only. Do not cache objects.
 
-## Cache Directory Permissions (Low)
+## Cache Directory Permissions (Medium)
 
-The `.simplePhpCache` subdirectory is created with mode `0770`. Recommendations:
+The `.simplePhpCache` subdirectory is created with mode `0770` when it does not
+already exist. The default base directory is the system temporary directory.
+On shared systems, another local user could create the cache subdirectory first
+or otherwise control its contents. This can enable cache poisoning and, with
+unsafe filesystem permissions, symlink attacks.
 
-- Set `$cacheBaseDir` to a directory outside the web root.
-- Ensure only the web server user has write access to that directory.
+Recommendations:
+
+- Always set `$cacheBaseDir` in production to an application-specific directory
+  outside the web root; do not rely on the system temporary directory.
+- Ensure the base directory and `.simplePhpCache` are owned and writable only by
+  the web server user, and do not allow untrusted users to create entries there.
 - Never expose the cache directory via a public URL.
 
 ## Cache Key / ID Guidance (Low)
