@@ -5,6 +5,10 @@
  * Licensed under the MIT license.
  */
 
+namespace Tschueller\SimplePhpCache;
+
+use RuntimeException;
+
 class SimplePhpCache
 {
     /** Prefix marker for JSON variable cache payloads. */

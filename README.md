@@ -11,9 +11,16 @@ Requirements
 Preparation
 -----------
 
-Include the SimplePhpCache class
+Install the package with Composer:
 
-	include "SimplePhpCache.php";
+	composer require tschueller/simplephpcache
+
+Load Composer's autoloader and import the class:
+
+	<?php
+	require __DIR__ . '/vendor/autoload.php';
+
+	use Tschueller\SimplePhpCache\SimplePhpCache;
 
 Set the cacheBaseDir (Optional, default is the system temp directory)
 
@@ -68,6 +75,15 @@ To refresh a special cache file, set in the init method as the second parameter 
 
 Migration
 ---------
+
+### From pre-1.0 (global class)
+
+**Namespace and autoloading changed (breaking):** `SimplePhpCache` is now the
+`Tschueller\SimplePhpCache\SimplePhpCache` class and is loaded via Composer
+PSR-4 autoloading. Replace manual includes such as `include "SimplePhpCache.php";`
+with Composer's `vendor/autoload.php`, then import the class:
+
+	use Tschueller\SimplePhpCache\SimplePhpCache;
 
 ### From pre-0.2 (PHP 5.x / 7.x)
 

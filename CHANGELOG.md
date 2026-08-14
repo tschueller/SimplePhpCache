@@ -7,6 +7,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Changed
+- **BREAKING**: The `SimplePhpCache` global class is now
+  `Tschueller\SimplePhpCache\SimplePhpCache`, loaded from `src/` through PSR-4.
+  Manual includes must be replaced with Composer's autoloader. See the migration
+  notes in README.md.
 - **BREAKING**: Variable cache storage switched from PHP serialization to JSON payloads with `SPCJSON1:` marker.
   Caching PHP objects is no longer supported.
 - Legacy serialized variable cache files are treated as invalid cache entries,

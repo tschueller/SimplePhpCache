@@ -11,7 +11,7 @@ Goal: modern baseline with minimal overhead and Packagist-readiness.
 Use these files first when relevant:
 - README.md for runtime behavior, documented API, and migration notes
 - composer.json for dependencies, scripts, and autoloading
-- class/ for implementation (SimplePhpCache.php)
+- src/ for implementation (SimplePhpCache.php)
 - tests/ for behavior checks (PHPUnit)
 - CHANGELOG.md for release notes
 - TODO.md for deferred or optional work
@@ -30,7 +30,7 @@ Use these files first when relevant:
 - Apply a security-first mindset when touching cache keys, file paths, serialization, and user-controlled input.
 
 ## Project Structure and Conventions
-- Source: `class/SimplePhpCache.php` (classmap autoloading, no namespace)
+- Source: `src/SimplePhpCache.php` (PSR-4 autoloading, namespace `Tschueller\SimplePhpCache`)
 - Tests: `tests/` (PHPUnit 11, PHP 8.2+)
 - CI: `.github/workflows/ci.yml` (PHP 8.2 / 8.3 / 8.4)
 - Static analysis: PHPStan level 3 (`phpstan.neon`)
