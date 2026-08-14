@@ -14,6 +14,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 - Additional tests for large variable payloads with multiline text and legacy invalid-cache handling.
+- Cache entries can now safely store `null` values, and cache session state is
+  reset between sessions.
+- Security hardening guidance for the system temporary directory default.
 
 ## [0.2.0] - 2026-08-13
 

@@ -16,6 +16,9 @@ class SimplePhpCache
     /** The cached content. */
     private static $cacheContent = null;
 
+    /** Whether the current cache session contains a cached value. */
+    private static bool $hasCacheContent = false;
+
     /** The cache base directory. */
     public static $cacheBaseDir = null;
 
@@ -42,15 +45,19 @@ class SimplePhpCache
 
         self::$startedCache = $id;
         self::$cacheContent = null;
+        self::$hasCacheContent = false;
 
         $cacheFile = self::getCacheDir() . "/" . self::getFilename($id);
 
         // Check if the cached file is older then the configured time
-        if(!$refresh && file_exists($cacheFile) &&
-                (time() - filemtime($cacheFile)) < self::$maxCacheTime)
-        {
-            self::$cacheContent = file_get_contents($cacheFile);
-            return false;
+        if (!$refresh && file_exists($cacheFile) &&
+                (time() - filemtime($cacheFile)) < self::$maxCacheTime) {
+            $content = file_get_contents($cacheFile);
+            if ($content !== false) {
+                self::$cacheContent = $content;
+                self::$hasCacheContent = true;
+                return false;
+            }
         }
 
         ob_start();
@@ -73,7 +80,7 @@ class SimplePhpCache
             throw new RuntimeException("Cache isn't started");
         }
 
-        if (self::$cacheContent != null)
+        if (self::$hasCacheContent)
         {
             $content = self::$cacheContent;
         }
@@ -86,6 +93,8 @@ class SimplePhpCache
         }
 
         self::$startedCache = null;
+        self::$cacheContent = null;
+        self::$hasCacheContent = false;
 
         return $content;
     }
@@ -111,6 +120,8 @@ class SimplePhpCache
         }
 
         self::$startedCache = $id;
+        self::$cacheContent = null;
+        self::$hasCacheContent = false;
 
         $cacheFile = self::getCacheDir() . "/" . self::getFilename($id);
 
@@ -120,9 +131,10 @@ class SimplePhpCache
         {
             $raw = file_get_contents($cacheFile);
             if ($raw !== false) {
-                $decoded = self::decodeVarCachePayload($raw);
-                if ($decoded !== null) {
+                [$isValid, $decoded] = self::decodeVarCachePayload($raw);
+                if ($isValid) {
                     self::$cacheContent = $decoded;
+                    self::$hasCacheContent = true;
 
                     return false;
                 }
@@ -161,6 +173,7 @@ class SimplePhpCache
         }
 
         self::$cacheContent = $data;
+        self::$hasCacheContent = true;
         self::writeVarCachePayload($cacheFile, $data);
     }
 
@@ -180,9 +193,12 @@ class SimplePhpCache
             throw new RuntimeException("Cache isn't started");
         }
 
+        $content = self::$cacheContent;
         self::$startedCache = null;
+        self::$cacheContent = null;
+        self::$hasCacheContent = false;
 
-        return self::$cacheContent;
+        return $content;
     }
 
 
@@ -249,20 +265,20 @@ class SimplePhpCache
      * Decode cache payload from the JSON cache format.
      *
      * @param string $raw
-     * @return mixed|null
+     * @return array{0: bool, 1: mixed} Whether the payload is valid and its value.
      */
     private static function decodeVarCachePayload($raw)
     {
         if (!str_starts_with($raw, self::VAR_CACHE_PREFIX)) {
-            return null;
+            return [false, null];
         }
 
         $json = substr($raw, strlen(self::VAR_CACHE_PREFIX));
 
         try {
-            return json_decode($json, true, 512, JSON_THROW_ON_ERROR);
+            return [true, json_decode($json, true, 512, JSON_THROW_ON_ERROR)];
         } catch (\JsonException $e) {
-            return null;
+            return [false, null];
         }
     }
 

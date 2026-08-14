@@ -44,6 +44,7 @@ class SimplePhpCacheTest extends TestCase
         $r = new ReflectionClass(SimplePhpCache::class);
         $r->getProperty('startedCache')->setValue(null, null);
         $r->getProperty('cacheContent')->setValue(null, null);
+        $r->getProperty('hasCacheContent')->setValue(null, false);
     }
 
     private function getCacheFilePathForId(string $id): string
@@ -90,6 +91,31 @@ class SimplePhpCacheTest extends TestCase
 
         $result = SimplePhpCache::finishVarCaching($id);
         $this->assertEquals($data, $result);
+    }
+
+    public function testVarCachingNullRoundTrip(): void
+    {
+        $id = 'var_null';
+
+        SimplePhpCache::initVarCaching($id);
+        SimplePhpCache::setVarCaching($id, null);
+        SimplePhpCache::finishVarCaching($id);
+        $this->resetStaticState();
+
+        $miss = SimplePhpCache::initVarCaching($id);
+        $this->assertFalse($miss);
+        $this->assertNull(SimplePhpCache::finishVarCaching($id));
+    }
+
+    public function testVarCachingMissDoesNotReturnContentFromPreviousSession(): void
+    {
+        SimplePhpCache::initVarCaching('first');
+        SimplePhpCache::setVarCaching('first', 'previous value');
+        SimplePhpCache::finishVarCaching('first');
+
+        $miss = SimplePhpCache::initVarCaching('second');
+        $this->assertTrue($miss);
+        $this->assertNull(SimplePhpCache::finishVarCaching('second'));
     }
 
     public function testVarCachingLargePayloadAndMultilineTextRoundTrip(): void
@@ -218,6 +244,18 @@ class SimplePhpCacheTest extends TestCase
 
         $output = SimplePhpCache::finishHTMLCaching($id);
         $this->assertEquals('stored content', $output);
+    }
+
+    public function testHtmlCachingReturnsEmptyCachedContent(): void
+    {
+        $id = 'html_empty';
+
+        SimplePhpCache::initHTMLCaching($id);
+        SimplePhpCache::finishHTMLCaching($id);
+        $this->resetStaticState();
+
+        $this->assertFalse(SimplePhpCache::initHTMLCaching($id));
+        $this->assertSame('', SimplePhpCache::finishHTMLCaching($id));
     }
 
     // --- clear / count ---
