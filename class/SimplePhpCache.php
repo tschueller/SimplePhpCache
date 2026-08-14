@@ -122,12 +122,7 @@ class SimplePhpCache
             if ($raw !== false) {
                 $decoded = self::decodeVarCachePayload($raw);
                 if ($decoded !== null) {
-                    self::$cacheContent = $decoded['data'];
-
-                    // Rewrite legacy payloads to the new JSON format on first successful read.
-                    if ($decoded['legacy']) {
-                        self::writeVarCachePayload($cacheFile, self::$cacheContent);
-                    }
+                    self::$cacheContent = $decoded;
 
                     return false;
                 }
@@ -247,43 +242,24 @@ class SimplePhpCache
     }
 
     /**
-     * Decode cache payload and identify whether it is legacy serialized data.
+     * Decode cache payload from the JSON cache format.
      *
      * @param string $raw
-     * @return array|null
+     * @return mixed|null
      */
     private static function decodeVarCachePayload($raw)
     {
-        if (str_starts_with($raw, self::VAR_CACHE_PREFIX)) {
-            $json = substr($raw, strlen(self::VAR_CACHE_PREFIX));
-            try {
-                return [
-                    'data' => json_decode($json, true, 512, JSON_THROW_ON_ERROR),
-                    'legacy' => false,
-                ];
-            } catch (JsonException $e) {
-                return null;
-            }
+        if (!str_starts_with($raw, self::VAR_CACHE_PREFIX)) {
+            return null;
         }
 
-        // Legacy payload fallback for automatic one-time migration.
-        if (preg_match('/^(?:a|s|i|d|b|N|O|C|R|r):/', $raw) === 1) {
-            $legacyData = @unserialize($raw, ['allowed_classes' => false]);
-            if ($legacyData === false && $raw !== 'b:0;') {
-                return null;
-            }
+        $json = substr($raw, strlen(self::VAR_CACHE_PREFIX));
 
-            if (self::containsObject($legacyData)) {
-                return null;
-            }
-
-            return [
-                'data' => $legacyData,
-                'legacy' => true,
-            ];
+        try {
+            return json_decode($json, true, 512, JSON_THROW_ON_ERROR);
+        } catch (JsonException $e) {
+            return null;
         }
-
-        return null;
     }
 
     /**

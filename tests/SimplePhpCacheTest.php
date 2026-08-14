@@ -125,45 +125,25 @@ class SimplePhpCacheTest extends TestCase
         $this->assertSame($data, $result);
     }
 
-    public function testLegacySerializedCacheIsAutoMigratedToJsonFormat(): void
+    public function testLegacySerializedPayloadIsDroppedAndTreatedAsMiss(): void
     {
-        $id = 'var_legacy_migrate';
-        $legacyData = ['legacy' => true, 'message' => "hello\nworld", 'size' => 12345];
-        $cacheFile = $this->getCacheFilePathForId($id);
-
-        SimplePhpCache::initVarCaching($id);
-        SimplePhpCache::setVarCaching($id, 'seed');
-        SimplePhpCache::finishVarCaching($id);
-        file_put_contents($cacheFile, serialize($legacyData), LOCK_EX);
-        $this->resetStaticState();
-
-        $miss = SimplePhpCache::initVarCaching($id);
-        $this->assertFalse($miss, 'Legacy payload should be read as a cache hit and migrated');
-        $result = SimplePhpCache::finishVarCaching($id);
-        $this->assertEquals($legacyData, $result);
-
-        $stored = file_get_contents($cacheFile);
-        $this->assertIsString($stored);
-        $this->assertStringStartsWith('SPCJSON1:', $stored);
-    }
-
-    public function testLegacySerializedObjectPayloadIsDroppedAndTreatedAsMiss(): void
-    {
-        $id = 'var_legacy_object';
+        $id = 'var_legacy_payload';
         $cacheFile = $this->getCacheFilePathForId($id);
 
         SimplePhpCache::initVarCaching($id);
         SimplePhpCache::setVarCaching($id, 'seed');
         SimplePhpCache::finishVarCaching($id);
 
-        $legacyObject = new stdClass();
-        $legacyObject->name = 'legacy';
-        file_put_contents($cacheFile, serialize($legacyObject), LOCK_EX);
+        file_put_contents($cacheFile, serialize(['legacy' => true, 'value' => 123]), LOCK_EX);
         $this->resetStaticState();
 
         $miss = SimplePhpCache::initVarCaching($id);
-        $this->assertTrue($miss, 'Legacy object payload is unsupported and should be treated as miss');
+        $this->assertTrue($miss, 'Legacy serialized payload is unsupported and should be treated as miss');
         $this->assertFileDoesNotExist($cacheFile);
+
+        SimplePhpCache::setVarCaching($id, ['fresh' => true]);
+        $result = SimplePhpCache::finishVarCaching($id);
+        $this->assertSame(['fresh' => true], $result);
     }
 
     public function testVarCachingExpiredEntryTreatedAsMiss(): void

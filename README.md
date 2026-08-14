@@ -77,10 +77,9 @@ Migration
 payload format (`SPCJSON1:` marker + JSON) instead of PHP `serialize()`.
 Caching PHP objects is no longer supported.
 
-**Legacy cache migration:** existing serialized cache files are detected
-automatically. Supported legacy payloads (arrays/scalars) are read once and
-immediately rewritten in the new JSON format. Unsupported legacy object payloads
-are deleted and treated as cache miss.
+**Legacy cache files:** old serialized variable cache files are treated as invalid
+cache entries. They are deleted and treated as cache miss, then regenerated in
+the new JSON format on the next write.
 
 **Cache ID prefix sanitization:** Non-alphanumeric characters in the `$idPrefix`
 parameter of `clearCache()` and `getCacheCount()` are now stripped. If you relied

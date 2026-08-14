@@ -5,10 +5,8 @@
 `SimplePhpCache` now stores variable cache data as a JSON payload with a format
 marker (`SPCJSON1:`). This removes the regular deserialization attack surface.
 
-Legacy serialized payloads are still recognized only for one-time migration.
-They are parsed with `allowed_classes=false`, then rewritten to JSON immediately.
-Legacy payloads that contain objects are treated as unsupported, deleted, and
-handled as cache miss.
+Legacy serialized payloads are not deserialized anymore.
+They are treated as invalid, deleted, and handled as cache miss.
 
 **What this means for you:** cache arrays and scalar values only. Do not cache objects.
 
