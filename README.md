@@ -73,10 +73,24 @@ Migration
 
 **PHP version:** Minimum requirement is now PHP 8.2.
 
-**Object caching removed:** `unserialize()` now uses `['allowed_classes' => false']`
-to prevent PHP Object Injection. If you cached PHP objects, they will deserialize
-as `__PHP_Incomplete_Class`. Migrate to caching arrays or scalar values instead.
+**Variable cache format changed (breaking):** variable cache now uses a JSON-based
+payload format (`SPCJSON1:` marker + JSON) instead of PHP `serialize()`.
+Caching PHP objects is no longer supported.
+
+**Legacy cache files:** old serialized variable cache files are treated as invalid
+cache entries. They are deleted and treated as cache miss, then regenerated in
+the new JSON format on the next write.
 
 **Cache ID prefix sanitization:** Non-alphanumeric characters in the `$idPrefix`
 parameter of `clearCache()` and `getCacheCount()` are now stripped. If you relied
 on special characters in prefixes, update your prefix strings accordingly.
+
+Release Process
+---------------
+
+When creating a version tag, add a matching section to `CHANGELOG.md` first:
+
+- `## [x.y.z] - YYYY-MM-DD`
+
+This repository includes a GitHub Actions guard that runs on tag pushes and fails
+if the corresponding changelog release section is missing.

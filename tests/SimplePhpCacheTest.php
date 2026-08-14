@@ -46,6 +46,12 @@ class SimplePhpCacheTest extends TestCase
         $r->getProperty('cacheContent')->setValue(null, null);
     }
 
+    private function getCacheFilePathForId(string $id): string
+    {
+        $cacheSubDir = $this->testCacheDir . '/.simplePhpCache';
+        return $cacheSubDir . '/' . urlencode(str_replace('\\', '/', $id)) . '-' . md5($id) . '.cache';
+    }
+
     // --- Variable caching ---
 
     public function testVarCachingMissOnFirstCall(): void
@@ -84,6 +90,60 @@ class SimplePhpCacheTest extends TestCase
 
         $result = SimplePhpCache::finishVarCaching($id);
         $this->assertEquals($data, $result);
+    }
+
+    public function testVarCachingLargePayloadAndMultilineTextRoundTrip(): void
+    {
+        $id = 'var_large_multiline';
+        $largeText = str_repeat("Line one\nLine two with umlaut äöü\r\n", 2000);
+        $largeList = range(1, 3000);
+        $data = [
+            'title' => 'Large payload',
+            'body' => $largeText,
+            'nested' => [
+                'rows' => array_map(
+                    static fn (int $n): array => [
+                        'id' => $n,
+                        'text' => "entry-{$n}",
+                        'active' => $n % 2 === 0,
+                    ],
+                    range(1, 500)
+                ),
+                'numbers' => $largeList,
+            ],
+        ];
+
+        SimplePhpCache::initVarCaching($id);
+        SimplePhpCache::setVarCaching($id, $data);
+        SimplePhpCache::finishVarCaching($id);
+        $this->resetStaticState();
+
+        $miss = SimplePhpCache::initVarCaching($id);
+        $this->assertFalse($miss);
+        $result = SimplePhpCache::finishVarCaching($id);
+
+        $this->assertSame($data, $result);
+    }
+
+    public function testLegacySerializedPayloadIsDroppedAndTreatedAsMiss(): void
+    {
+        $id = 'var_legacy_payload';
+        $cacheFile = $this->getCacheFilePathForId($id);
+
+        SimplePhpCache::initVarCaching($id);
+        SimplePhpCache::setVarCaching($id, 'seed');
+        SimplePhpCache::finishVarCaching($id);
+
+        file_put_contents($cacheFile, serialize(['legacy' => true, 'value' => 123]), LOCK_EX);
+        $this->resetStaticState();
+
+        $miss = SimplePhpCache::initVarCaching($id);
+        $this->assertTrue($miss, 'Legacy serialized payload is unsupported and should be treated as miss');
+        $this->assertFileDoesNotExist($cacheFile);
+
+        SimplePhpCache::setVarCaching($id, ['fresh' => true]);
+        $result = SimplePhpCache::finishVarCaching($id);
+        $this->assertSame(['fresh' => true], $result);
     }
 
     public function testVarCachingExpiredEntryTreatedAsMiss(): void

@@ -1,15 +1,14 @@
 # Security Notes
 
-## Deserialization (Medium — mitigated)
+## Variable Cache Format (Low)
 
-`SimplePhpCache` uses `serialize()`/`unserialize()` for variable caching.
-`unserialize()` is called with `['allowed_classes' => false]` to prevent PHP Object
-Injection: no class constructors or magic methods (`__wakeup`, `__destruct`) are
-invoked on deserialization. Arrays and scalar values are unaffected.
+`SimplePhpCache` now stores variable cache data as a JSON payload with a format
+marker (`SPCJSON1:`). This removes the regular deserialization attack surface.
 
-**What this means for you:** PHP objects cannot be stored in the variable cache.
-Use arrays or scalar values instead. A full replacement with `json_encode`/`json_decode`
-(which has no deserialization attack surface at all) is tracked in TODO.md.
+Legacy serialized payloads are not deserialized anymore.
+They are treated as invalid, deleted, and handled as cache miss.
+
+**What this means for you:** cache arrays and scalar values only. Do not cache objects.
 
 ## Cache Directory Permissions (Low)
 

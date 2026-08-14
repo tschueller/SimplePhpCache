@@ -2,8 +2,10 @@
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-// Set the cacheBaseDir (if needed). Default is the system temp directory.
-//SimplePhpCache::$cacheBaseDir = "./";
+// Set the cacheBaseDir (default is the system temp directory).
+SimplePhpCache::$cacheBaseDir = __DIR__;
+
+echo SimplePhpCache::$cacheBaseDir;
 
 // Set the max cache time (if needed). Default is 86400;
 //SimplePhpCache::$maxCacheTime = 86400;
