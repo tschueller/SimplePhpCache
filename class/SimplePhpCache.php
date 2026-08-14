@@ -26,7 +26,7 @@ class SimplePhpCache
      * Start the HTML output caching.
      *
      * @param string $id
-     *               The cache identifyer.
+     *               The cache identifier.
      * @param boolean $refresh
      *               Refresh the cache. Optional, default is false
      * @return boolean Returned true if no cache is available otherwise false
@@ -62,7 +62,7 @@ class SimplePhpCache
      * Stops the HTML output caching and returned the cached content.
      *
      * @param string $id
-     *               The cache identifyer.
+     *               The cache identifier.
      * @throws RuntimeException
      *               When the cache is not started
      */
@@ -96,7 +96,7 @@ class SimplePhpCache
      * Start the variable caching.
      *
      * @param string $id
-     *               The cache identifyer.
+     *               The cache identifier.
      * @param boolean $refresh
      *               Refresh the cache. Option, default is false
      * @return boolean Returned true if no cache is available otherwise false
@@ -142,7 +142,7 @@ class SimplePhpCache
      * Set the variable caching data.
      *
      * @param string $id
-     *               The cache identifyer.
+     *               The cache identifier.
      * @param mixed $data
      *               The data to cache.
      * @throws RuntimeException
@@ -169,7 +169,7 @@ class SimplePhpCache
      * Stops the variable caching and returned the cached content.
      *
      * @param string $id
-     *               The cache identifyer.
+               The cache identifier.
      * @throws RuntimeException
      *               When the cache is not started
      */
@@ -190,9 +190,9 @@ class SimplePhpCache
      * Clear the complete cache or only for the given id or the given idPrefix.
      *
      * @param string $id
-     *            The cache identifyer
+            The cache identifier.
      * @param string $idPrefix
-     *            The cache identifyer prefix
+            The cache identifier prefix.
      */
     public static function clearCache($id = null, $idPrefix = null) {
         if ($id) {
@@ -213,8 +213,8 @@ class SimplePhpCache
      * Return the count of all cache files or for the given prefix.
      *
      * @param string $idPrefix
-     *            The cache identifyer prefix
-     * @return number
+     *            The cache identifier prefix
+     * @return int
      *            The cache file count.
      */
     public static function getCacheCount($idPrefix = "") {
@@ -222,10 +222,14 @@ class SimplePhpCache
         return count(glob(self::getCacheDir() . "/" . $pattern) ?: []);
     }
 
-    /** Strip glob-unsafe characters from a cache ID prefix. */
-    private static function sanitizeIdPrefix($prefix)
+    /**
+     * Strip glob-unsafe characters from a cache ID prefix.
+     * @param string $idPrefix
+     * @return string
+     */
+    private static function sanitizeIdPrefix($idPrefix)
     {
-        return preg_replace('/[^a-zA-Z0-9_\-.]/', '', (string) $prefix);
+        return preg_replace('/[^a-zA-Z0-9_\-.]/', '', (string) $idPrefix);
     }
 
     /**
@@ -257,7 +261,7 @@ class SimplePhpCache
 
         try {
             return json_decode($json, true, 512, JSON_THROW_ON_ERROR);
-        } catch (JsonException $e) {
+        } catch (\JsonException $e) {
             return null;
         }
     }
@@ -273,7 +277,7 @@ class SimplePhpCache
     {
         try {
             $payload = self::VAR_CACHE_PREFIX . json_encode($data, JSON_THROW_ON_ERROR);
-        } catch (JsonException $e) {
+        } catch (\JsonException $e) {
             throw new RuntimeException("Error encoding variable cache payload: " . $e->getMessage(), 0, $e);
         }
 
