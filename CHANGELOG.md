@@ -7,6 +7,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Changed
+- Added scalar, nullable, and `mixed` type declarations to the public cache API
+  and its configuration properties. Calls that already use the documented value
+  types remain compatible.
+- PHPStan analysis now runs at level 8.
 - **BREAKING**: The `SimplePhpCache` global class is now
   `Tschueller\SimplePhpCache\SimplePhpCache`, loaded from `src/` through PSR-4.
   Manual includes must be replaced with Composer's autoloader. See the migration
