@@ -4,10 +4,6 @@ Deferred improvements — implement when explicitly requested or when capacity a
 
 ## v1.x
 
-- **[MEDIUM] Make cache writes atomic and protect readers from partial files**
-  `LOCK_EX` does not prevent readers from observing a file while it is being
-  written. Add an atomic-write strategy and concurrent-read/write tests.
-
 - **[MEDIUM] Publish to Packagist**
   Run `composer validate --strict`, submit to packagist.org.
   Prerequisite: stable tagged 1.0.0 release with namespace.
@@ -24,6 +20,14 @@ Deferred improvements — implement when explicitly requested or when capacity a
 - **[LOW] Expand test suite**
   Edge cases: empty string IDs, very long IDs, unreadable cache directory,
   Unicode in cache IDs.
+
+- **[OPTIONAL] Prevent cache stampedes for concurrent cache misses**
+  Add per-key coordination so concurrent requests do not regenerate the same
+  missing or expired entry. Relevant for expensive cache generation.
+
+- **[OPTIONAL] Define `clearCache()` behaviour during concurrent writes**
+  Decide whether an active writer may republish an entry after it was cleared;
+  implement synchronization only if strict clearing semantics are required.
 
 ## v2.x
 
