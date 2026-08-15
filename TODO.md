@@ -2,13 +2,15 @@
 
 Deferred improvements — implement when explicitly requested or when capacity allows.
 
-## Medium Priority
+## v1.x
 
-- **[MEDIUM] Implement PSR-16 SimpleCache interface**
-  Makes the library interoperable with PSR-16 consumers. Requires namespace + new
-  API surface. Large refactor — deserves its own PR.
+- **[MEDIUM] Make cache writes atomic and protect readers from partial files**
+  `LOCK_EX` does not prevent readers from observing a file while it is being
+  written. Add an atomic-write strategy and concurrent-read/write tests.
 
-## Low Priority
+- **[MEDIUM] Publish to Packagist**
+  Run `composer validate --strict`, submit to packagist.org.
+  Prerequisite: stable tagged 1.0.0 release with namespace.
 
 - **[LOW] Add code coverage reporting to CI (Xdebug/PCOV)**
   Track test coverage over time. Optional quality gate.
@@ -23,10 +25,8 @@ Deferred improvements — implement when explicitly requested or when capacity a
   Edge cases: empty string IDs, very long IDs, unreadable cache directory,
   Unicode in cache IDs.
 
-- **[MEDIUM] Make cache writes atomic and protect readers from partial files**
-  `LOCK_EX` does not prevent readers from observing a file while it is being
-  written. Add an atomic-write strategy and concurrent-read/write tests.
+## v2.x
 
-- **[LOW] Publish to Packagist**
-  Run `composer validate --strict`, submit to packagist.org.
-  Prerequisite: stable tagged release with namespace.
+- **[MEDIUM] Implement PSR-16 SimpleCache interface**
+  Adds a separate PSR-16 cache API and storage model. Deliberately out of scope
+  for the stable 1.x SimplePhpCache API; deserves its own major-version PR.
