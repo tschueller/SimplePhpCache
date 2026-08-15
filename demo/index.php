@@ -7,8 +7,6 @@ use Tschueller\SimplePhpCache\SimplePhpCache;
 // Set the cacheBaseDir (default is the system temp directory).
 SimplePhpCache::$cacheBaseDir = __DIR__;
 
-echo SimplePhpCache::$cacheBaseDir;
-
 // Set the max cache time (if needed). Default is 86400;
 //SimplePhpCache::$maxCacheTime = 86400;
 
