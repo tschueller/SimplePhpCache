@@ -18,13 +18,12 @@
         "phpstan/phpstan": "^2.0"
     },
     "autoload": {
-        "classmap": ["class/SimplePhpCache.php"]
-    },
-    "autoload-dev": {
-        "classmap": ["tests/"]
+        "psr-4": {
+            "Tschueller\\SimplePhpCache\\": "src/"
+        }
     },
     "scripts": {
-        "lint": "php -l class/SimplePhpCache.php",
+        "lint": "php -l src/SimplePhpCache.php",
         "test": "phpunit --testdox",
         "analyse": "phpstan analyse --no-progress",
         "check": ["@lint", "@analyse", "@test"],

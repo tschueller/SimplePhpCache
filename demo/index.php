@@ -2,6 +2,8 @@
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
+use Tschueller\SimplePhpCache\SimplePhpCache;
+
 // Set the cacheBaseDir (default is the system temp directory).
 SimplePhpCache::$cacheBaseDir = __DIR__;
 
