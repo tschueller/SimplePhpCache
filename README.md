@@ -22,9 +22,16 @@ Load Composer's autoloader and import the class:
 
 	use Tschueller\SimplePhpCache\SimplePhpCache;
 
-Set the cacheBaseDir (Optional, default is the system temp directory)
+Set the cache base directory (required for production):
 
-	SimplePhpCache::$cacheBaseDir = "./";
+	SimplePhpCache::$cacheBaseDir = __DIR__ . "/var/cache";
+
+If no cache base directory is configured, SimplePhpCache temporarily falls back
+to the system temporary directory for backward compatibility. This emits an
+`E_USER_DEPRECATED` warning once per request and will be removed in version 2.0.
+Set an application-owned directory outside the web root. Standard PHP error
+configuration controls whether this warning is displayed or logged; for example,
+exclude `E_USER_DEPRECATED` from `error_reporting` to suppress it.
 
 Set the max cache time in seconds (Optional, default is 86400 (1 day)):
 

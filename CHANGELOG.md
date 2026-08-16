@@ -21,6 +21,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   Caching PHP objects is no longer supported.
 - Legacy serialized variable cache files are treated as invalid cache entries,
   dropped, and handled as cache miss.
+- Using the implicit system temporary directory now emits an `E_USER_DEPRECATED`
+  warning once per request. Configure `SimplePhpCache::$cacheBaseDir`; the
+  fallback will be removed in version 2.0.
 
 ### Added
 - Additional tests for large variable payloads with multiline text and legacy invalid-cache handling.

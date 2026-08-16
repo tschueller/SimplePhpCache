@@ -26,6 +26,9 @@ class SimplePhpCache
     /** The cache base directory. */
     public static ?string $cacheBaseDir = null;
 
+    /** Whether the implicit cache directory deprecation was already reported. */
+    private static bool $defaultCacheDirectoryDeprecationReported = false;
+
     /** The max cache time. */
     public static int $maxCacheTime = 86400;
 
@@ -401,6 +404,14 @@ class SimplePhpCache
     private static function getCacheDir(): string
     {
        if (self::$cacheBaseDir == null) {
+            if (!self::$defaultCacheDirectoryDeprecationReported) {
+                trigger_error(
+                    'Using the system temporary directory as the SimplePhpCache cache base directory is deprecated. '
+                    . 'Set SimplePhpCache::$cacheBaseDir to an application-owned directory; the implicit default will be removed in 2.0.',
+                    E_USER_DEPRECATED
+                );
+                self::$defaultCacheDirectoryDeprecationReported = true;
+            }
             self::$cacheBaseDir = sys_get_temp_dir();
         }
         $dir = self::fixPath(self::$cacheBaseDir) . "/.simplePhpCache";
