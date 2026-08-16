@@ -15,19 +15,19 @@ class SimplePhpCache
     private const VAR_CACHE_PREFIX = "SPCJSON1:";
 
      /** Cache id from the current started cache. */
-    private static $startedCache = null;
+    private static ?string $startedCache = null;
 
     /** The cached content. */
-    private static $cacheContent = null;
+    private static mixed $cacheContent = null;
 
     /** Whether the current cache session contains a cached value. */
     private static bool $hasCacheContent = false;
 
     /** The cache base directory. */
-    public static $cacheBaseDir = null;
+    public static ?string $cacheBaseDir = null;
 
     /** The max cache time. */
-    public static $maxCacheTime = 86400;
+    public static int $maxCacheTime = 86400;
 
     /**
      * Start the HTML output caching.
@@ -40,7 +40,7 @@ class SimplePhpCache
      * @throws RuntimeException
      *               When the cache is already started
      */
-    public static function initHTMLCaching($id, $refresh = false)
+    public static function initHTMLCaching(string $id, bool $refresh = false): bool
     {
         if (self::$startedCache != null)
         {
@@ -77,7 +77,7 @@ class SimplePhpCache
      * @throws RuntimeException
      *               When the cache is not started
      */
-    public static function finishHTMLCaching($id)
+    public static function finishHTMLCaching(string $id): string
     {
         if (self::$startedCache != $id)
         {
@@ -86,12 +86,20 @@ class SimplePhpCache
 
         if (self::$hasCacheContent)
         {
+            if (!is_string(self::$cacheContent)) {
+                throw new RuntimeException("Invalid HTML cache content");
+            }
+
             $content = self::$cacheContent;
         }
         else
         {
             $cacheFile = self::getCacheDir() . "/" . self::getFilename($id);
             $content = ob_get_clean();
+            if ($content === false) {
+                throw new RuntimeException("Error reading output buffer");
+            }
+
             if (file_put_contents($cacheFile, $content, LOCK_EX) === false)
                 throw new RuntimeException("Error writing cache: '$cacheFile'");
         }
@@ -116,7 +124,7 @@ class SimplePhpCache
      * @throws RuntimeException
      *               When the cache is already started
      */
-    public static function initVarCaching($id, $refresh = false)
+    public static function initVarCaching(string $id, bool $refresh = false): bool
     {
         if (self::$startedCache != null)
         {
@@ -163,7 +171,7 @@ class SimplePhpCache
      *               The data to cache.
      * @throws RuntimeException
      */
-    public static function setVarCaching($id, $data)
+    public static function setVarCaching(string $id, mixed $data): void
     {
         if (self::$startedCache != $id)
         {
@@ -190,7 +198,7 @@ class SimplePhpCache
      * @throws RuntimeException
      *               When the cache is not started
      */
-    public static function finishVarCaching($id)
+    public static function finishVarCaching(string $id): mixed
     {
         if (self::$startedCache != $id)
         {
@@ -214,7 +222,8 @@ class SimplePhpCache
      * @param string $idPrefix
             The cache identifier prefix.
      */
-    public static function clearCache($id = null, $idPrefix = null) {
+    public static function clearCache(?string $id = null, ?string $idPrefix = null): void
+    {
         if ($id) {
             $pattern = self::getFilename($id);
         } else if ($idPrefix) {
@@ -237,7 +246,8 @@ class SimplePhpCache
      * @return int
      *            The cache file count.
      */
-    public static function getCacheCount($idPrefix = "") {
+    public static function getCacheCount(string $idPrefix = ""): int
+    {
         $pattern = self::sanitizeIdPrefix($idPrefix) . "*.cache";
         return count(glob(self::getCacheDir() . "/" . $pattern) ?: []);
     }
@@ -247,9 +257,9 @@ class SimplePhpCache
      * @param string $idPrefix
      * @return string
      */
-    private static function sanitizeIdPrefix($idPrefix)
+    private static function sanitizeIdPrefix(string $idPrefix): string
     {
-        return preg_replace('/[^a-zA-Z0-9_\-.]/', '', (string) $idPrefix);
+        return preg_replace('/[^a-zA-Z0-9_\-.]/', '', $idPrefix) ?? '';
     }
 
     /**
@@ -260,7 +270,7 @@ class SimplePhpCache
      * @return string
      *               The cache file name.
      */
-    private static function getFilename($id)
+    private static function getFilename(string $id): string
     {
         return urlencode(self::fixPath($id)) . "-" . md5($id) . ".cache";
     }
@@ -271,7 +281,7 @@ class SimplePhpCache
      * @param string $raw
      * @return array{0: bool, 1: mixed} Whether the payload is valid and its value.
      */
-    private static function decodeVarCachePayload($raw)
+    private static function decodeVarCachePayload(string $raw): array
     {
         if (!str_starts_with($raw, self::VAR_CACHE_PREFIX)) {
             return [false, null];
@@ -293,7 +303,7 @@ class SimplePhpCache
      * @param mixed $data
      * @throws RuntimeException
      */
-    private static function writeVarCachePayload($cacheFile, $data)
+    private static function writeVarCachePayload(string $cacheFile, mixed $data): void
     {
         try {
             $payload = self::VAR_CACHE_PREFIX . json_encode($data, JSON_THROW_ON_ERROR);
@@ -312,7 +322,7 @@ class SimplePhpCache
      * @param mixed $value
      * @return boolean
      */
-    private static function containsObject($value)
+    private static function containsObject(mixed $value): bool
     {
         if (is_object($value)) {
             return true;
@@ -337,7 +347,7 @@ class SimplePhpCache
      *               The dir path to fix.
      * @return string The fixed path.
      */
-    private static function fixPath($path)
+    private static function fixPath(string $path): string
     {
         return str_replace("\\", "/", $path);
     }
@@ -350,7 +360,7 @@ class SimplePhpCache
      * @throws RuntimeException
      *            When the cache directory creation failed.
      */
-    private static function getCacheDir()
+    private static function getCacheDir(): string
     {
        if (self::$cacheBaseDir == null) {
             self::$cacheBaseDir = sys_get_temp_dir();
