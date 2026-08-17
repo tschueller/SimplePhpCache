@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Changed
+- Cache files are now written to a temporary file and atomically published,
+  preventing readers from observing partially written cache entries.
 - Added scalar, nullable, and `mixed` type declarations to the public cache API
   and its configuration properties. Calls that already use the documented value
   types remain compatible.

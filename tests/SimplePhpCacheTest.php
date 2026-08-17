@@ -206,6 +206,29 @@ class SimplePhpCacheTest extends TestCase
         $this->assertEquals('updated', $result);
     }
 
+    public function testCacheRefreshAtomicallyReplacesExistingFile(): void
+    {
+        $id = 'atomic_refresh';
+
+        SimplePhpCache::initVarCaching($id);
+        SimplePhpCache::setVarCaching($id, 'original');
+        SimplePhpCache::finishVarCaching($id);
+        $this->resetStaticState();
+
+        SimplePhpCache::initVarCaching($id, true);
+        SimplePhpCache::setVarCaching($id, 'replacement');
+        SimplePhpCache::finishVarCaching($id);
+        $this->resetStaticState();
+
+        $this->assertFalse(SimplePhpCache::initVarCaching($id));
+        $this->assertSame('replacement', SimplePhpCache::finishVarCaching($id));
+        $this->assertSame(
+            [],
+            glob($this->testCacheDir . '/.simplePhpCache/.simplephpcache-*') ?: [],
+            'Successful cache writes must not leave temporary files behind.'
+        );
+    }
+
     public function testInitVarThrowsWhenAlreadyStarted(): void
     {
         $this->expectException(RuntimeException::class);

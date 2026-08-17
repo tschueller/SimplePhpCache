@@ -100,8 +100,7 @@ class SimplePhpCache
                 throw new RuntimeException("Error reading output buffer");
             }
 
-            if (file_put_contents($cacheFile, $content, LOCK_EX) === false)
-                throw new RuntimeException("Error writing cache: '$cacheFile'");
+            self::writeCacheFile($cacheFile, $content);
         }
 
         self::$startedCache = null;
@@ -311,8 +310,47 @@ class SimplePhpCache
             throw new RuntimeException("Error encoding variable cache payload: " . $e->getMessage(), 0, $e);
         }
 
-        if (file_put_contents($cacheFile, $payload, LOCK_EX) === false) {
-            throw new RuntimeException("Error writing cache: '$cacheFile'");
+        self::writeCacheFile($cacheFile, $payload);
+    }
+
+    /**
+     * Write a cache file through a temporary file and atomically publish it.
+     *
+     * Keeping the temporary file in the cache directory makes rename() an
+     * atomic replacement on supported filesystems, so readers see either the
+     * complete old file or the complete new file.
+     *
+     * @param string $cacheFile
+     * @param string $content
+     * @throws RuntimeException
+     */
+    private static function writeCacheFile(string $cacheFile, string $content): void
+    {
+        $cacheDir = realpath(dirname($cacheFile));
+        if ($cacheDir === false) {
+            throw new RuntimeException("Cache directory does not exist for: '$cacheFile'");
+        }
+
+        $temporaryFile = tempnam($cacheDir, '.simplephpcache-');
+        if ($temporaryFile === false) {
+            throw new RuntimeException("Error creating temporary cache file for: '$cacheFile'");
+        }
+
+        try {
+            $writtenBytes = file_put_contents($temporaryFile, $content, LOCK_EX);
+            if ($writtenBytes === false || $writtenBytes !== strlen($content)) {
+                throw new RuntimeException("Error writing temporary cache: '$temporaryFile'");
+            }
+
+            if (!rename($temporaryFile, $cacheFile)) {
+                throw new RuntimeException("Error publishing cache: '$cacheFile'");
+            }
+
+            $temporaryFile = null;
+        } finally {
+            if ($temporaryFile !== null && file_exists($temporaryFile)) {
+                @unlink($temporaryFile);
+            }
         }
     }
 
