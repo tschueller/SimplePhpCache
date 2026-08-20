@@ -26,6 +26,12 @@ class SimplePhpCache
     /** The cache base directory. */
     public static ?string $cacheBaseDir = null;
 
+    /**
+     * Optional namespace used to separate cache files below the cache directory.
+     * Must be a single safe directory name.
+     */
+    public static ?string $cacheNamespace = null;
+
     /** Whether the implicit cache directory deprecation was already reported. */
     private static bool $defaultCacheDirectoryDeprecationReported = false;
 
@@ -423,10 +429,29 @@ class SimplePhpCache
             self::$cacheBaseDir = sys_get_temp_dir();
         }
         $dir = self::fixPath(self::$cacheBaseDir) . "/.simplePhpCache";
+        if (self::$cacheNamespace !== null) {
+            self::validateCacheNamespace(self::$cacheNamespace);
+            $dir .= "/" . self::$cacheNamespace;
+        }
         if (!is_dir($dir) && !mkdir($dir, 0770, true)) {
             throw new RuntimeException("Can not create cache directory: '$dir'");
         }
         return $dir;
+    }
+
+    /**
+     * Validate that a namespace cannot alter the configured cache path.
+     *
+     * @param string $namespace
+     * @throws RuntimeException
+     */
+    private static function validateCacheNamespace(string $namespace): void
+    {
+        if (preg_match('/^[A-Za-z0-9_-][A-Za-z0-9._-]*$/', $namespace) !== 1) {
+            throw new RuntimeException(
+                "Cache namespace must be a single directory name containing only letters, numbers, dots, hyphens, or underscores"
+            );
+        }
     }
 
 }

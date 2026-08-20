@@ -26,6 +26,11 @@ Set the cache base directory (required for production):
 
 	SimplePhpCache::$cacheBaseDir = __DIR__ . "/var/cache";
 
+Optionally set a namespace to keep cache entries for several applications or
+tenants separate below the same base directory:
+
+	SimplePhpCache::$cacheNamespace = "customer-a";
+
 If no cache base directory is configured, SimplePhpCache temporarily falls back
 to the system temporary directory for backward compatibility. This emits an
 `E_USER_DEPRECATED` warning once per request and will be removed in version 2.0.
@@ -91,30 +96,8 @@ third parameter:
 Migration
 ---------
 
-### From pre-1.0 (global class)
-
-**Namespace and autoloading changed (breaking):** `SimplePhpCache` is now the
-`Tschueller\SimplePhpCache\SimplePhpCache` class and is loaded via Composer
-PSR-4 autoloading. Replace manual includes such as `include "SimplePhpCache.php";`
-with Composer's `vendor/autoload.php`, then import the class:
-
-	use Tschueller\SimplePhpCache\SimplePhpCache;
-
-### From pre-0.2 (PHP 5.x / 7.x)
-
-**PHP version:** Minimum requirement is now PHP 8.2.
-
-**Variable cache format changed (breaking):** variable cache now uses a JSON-based
-payload format (`SPCJSON1:` marker + JSON) instead of PHP `serialize()`.
-Caching PHP objects is no longer supported.
-
-**Legacy cache files:** old serialized variable cache files are treated as invalid
-cache entries. They are deleted and treated as cache miss, then regenerated in
-the new JSON format on the next write.
-
-**Cache ID prefix sanitization:** Non-alphanumeric characters in the `$idPrefix`
-parameter of `clearCache()` and `getCacheCount()` are now stripped. If you relied
-on special characters in prefixes, update your prefix strings accordingly.
+See [docs/migration.md](docs/migration.md) for all migration paths, including
+the separately maintained `PhaseUtils` fork.
 
 Release Process
 ---------------

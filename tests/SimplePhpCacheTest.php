@@ -15,6 +15,7 @@ class SimplePhpCacheTest extends TestCase
         mkdir($this->testCacheDir, 0770, true);
 
         SimplePhpCache::$cacheBaseDir = $this->testCacheDir;
+        SimplePhpCache::$cacheNamespace = null;
         SimplePhpCache::$maxCacheTime = 86400;
 
         $this->resetStaticState();
@@ -26,7 +27,14 @@ class SimplePhpCacheTest extends TestCase
 
         $cacheSubDir = $this->testCacheDir . '/.simplePhpCache';
         foreach (glob($cacheSubDir . '/*') ?: [] as $file) {
-            unlink($file);
+            if (is_dir($file)) {
+                foreach (glob($file . '/*') ?: [] as $namespacedFile) {
+                    unlink($namespacedFile);
+                }
+                rmdir($file);
+            } else {
+                unlink($file);
+            }
         }
         if (is_dir($cacheSubDir)) {
             rmdir($cacheSubDir);
@@ -36,6 +44,7 @@ class SimplePhpCacheTest extends TestCase
         }
 
         SimplePhpCache::$cacheBaseDir = null;
+        SimplePhpCache::$cacheNamespace = null;
     }
 
     private function resetStaticState(): void
@@ -323,6 +332,37 @@ class SimplePhpCacheTest extends TestCase
 
         $this->assertFalse(SimplePhpCache::initHTMLCaching($id));
         $this->assertSame('', SimplePhpCache::finishHTMLCaching($id));
+    }
+
+    public function testCacheNamespaceSeparatesCacheFiles(): void
+    {
+        $id = 'namespaced_cache';
+        SimplePhpCache::$cacheNamespace = 'customer-a';
+
+        SimplePhpCache::initVarCaching($id);
+        SimplePhpCache::setVarCaching($id, 'namespaced value');
+        SimplePhpCache::finishVarCaching($id);
+
+        $cacheFile = $this->testCacheDir . '/.simplePhpCache/customer-a/'
+            . urlencode($id) . '-' . md5($id) . '.cache';
+        $this->assertFileExists($cacheFile);
+    }
+
+    public function testCacheNamespaceRejectsUnsafePath(): void
+    {
+        SimplePhpCache::$cacheNamespace = '../outside-cache';
+
+        try {
+            SimplePhpCache::getCacheCount();
+            $this->fail('An unsafe cache namespace must be rejected.');
+        } catch (RuntimeException $exception) {
+            $this->assertStringStartsWith(
+                'Cache namespace must be a single directory name',
+                $exception->getMessage()
+            );
+        } finally {
+            SimplePhpCache::$cacheNamespace = null;
+        }
     }
 
     public function testHtmlCachingPerCallMaxCacheTimeOverridesGlobalSetting(): void
