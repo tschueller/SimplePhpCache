@@ -39,11 +39,14 @@ class SimplePhpCache
      *               The cache identifier.
      * @param boolean $refresh
      *               Refresh the cache. Optional, default is false
+     * @param int|null $maxCacheTime
+     *               The max cache time in seconds for this call. Optional; uses
+     *               the configured global value by default.
      * @return boolean Returned true if no cache is available otherwise false
      * @throws RuntimeException
      *               When the cache is already started
      */
-    public static function initHTMLCaching(string $id, bool $refresh = false): bool
+    public static function initHTMLCaching(string $id, bool $refresh = false, ?int $maxCacheTime = null): bool
     {
         if (self::$startedCache != null)
         {
@@ -53,12 +56,13 @@ class SimplePhpCache
         self::$startedCache = $id;
         self::$cacheContent = null;
         self::$hasCacheContent = false;
+        $maxCacheTime ??= self::$maxCacheTime;
 
         $cacheFile = self::getCacheDir() . "/" . self::getFilename($id);
 
         // Check if the cached file is older then the configured time
         if (!$refresh && file_exists($cacheFile) &&
-                (time() - filemtime($cacheFile)) < self::$maxCacheTime) {
+                (time() - filemtime($cacheFile)) < $maxCacheTime) {
             $content = file_get_contents($cacheFile);
             if ($content !== false) {
                 self::$cacheContent = $content;
@@ -122,11 +126,14 @@ class SimplePhpCache
      *               The cache identifier.
      * @param boolean $refresh
      *               Refresh the cache. Option, default is false
+     * @param int|null $maxCacheTime
+     *               The max cache time in seconds for this call. Optional; uses
+     *               the configured global value by default.
      * @return boolean Returned true if no cache is available otherwise false
      * @throws RuntimeException
      *               When the cache is already started
      */
-    public static function initVarCaching(string $id, bool $refresh = false): bool
+    public static function initVarCaching(string $id, bool $refresh = false, ?int $maxCacheTime = null): bool
     {
         if (self::$startedCache != null)
         {
@@ -136,12 +143,13 @@ class SimplePhpCache
         self::$startedCache = $id;
         self::$cacheContent = null;
         self::$hasCacheContent = false;
+        $maxCacheTime ??= self::$maxCacheTime;
 
         $cacheFile = self::getCacheDir() . "/" . self::getFilename($id);
 
         // Check if the cached file is older then the configured time
         if(!$refresh && file_exists($cacheFile) &&
-                (time() - filemtime($cacheFile)) < self::$maxCacheTime)
+                (time() - filemtime($cacheFile)) < $maxCacheTime)
         {
             $raw = file_get_contents($cacheFile);
             if ($raw !== false) {

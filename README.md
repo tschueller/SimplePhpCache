@@ -78,6 +78,14 @@ To refresh a special cache file, set in the init method as the second parameter 
 	// Variable
 	SimplePhpCache::initVarCaching($cacheName, true)
 
+To override the cache lifetime for a single cache entry without changing the
+global `SimplePhpCache::$maxCacheTime`, pass its lifetime in seconds as the
+third parameter:
+
+	// Cache this entry for 5 minutes
+	SimplePhpCache::initHTMLCaching($cacheName, false, 300)
+	SimplePhpCache::initVarCaching($cacheName, false, 300)
+
 ---
 
 Migration

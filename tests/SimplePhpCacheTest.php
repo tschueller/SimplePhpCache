@@ -219,6 +219,21 @@ class SimplePhpCacheTest extends TestCase
         SimplePhpCache::finishVarCaching($id);
     }
 
+    public function testVarCachingPerCallMaxCacheTimeOverridesGlobalSetting(): void
+    {
+        $id = 'var_per_call_ttl';
+
+        SimplePhpCache::initVarCaching($id);
+        SimplePhpCache::setVarCaching($id, 'expires');
+        SimplePhpCache::finishVarCaching($id);
+        $this->resetStaticState();
+
+        $this->assertTrue(SimplePhpCache::initVarCaching($id, false, 0));
+        SimplePhpCache::setVarCaching($id, 'renewed');
+        SimplePhpCache::finishVarCaching($id);
+        $this->assertSame(86400, SimplePhpCache::$maxCacheTime);
+    }
+
     public function testVarCachingForceRefresh(): void
     {
         $id = 'var_refresh';
@@ -308,6 +323,22 @@ class SimplePhpCacheTest extends TestCase
 
         $this->assertFalse(SimplePhpCache::initHTMLCaching($id));
         $this->assertSame('', SimplePhpCache::finishHTMLCaching($id));
+    }
+
+    public function testHtmlCachingPerCallMaxCacheTimeOverridesGlobalSetting(): void
+    {
+        $id = 'html_per_call_ttl';
+
+        if (SimplePhpCache::initHTMLCaching($id)) {
+            echo 'expires';
+        }
+        SimplePhpCache::finishHTMLCaching($id);
+        $this->resetStaticState();
+
+        $this->assertTrue(SimplePhpCache::initHTMLCaching($id, false, 0));
+        echo 'renewed';
+        $this->assertSame('renewed', SimplePhpCache::finishHTMLCaching($id));
+        $this->assertSame(86400, SimplePhpCache::$maxCacheTime);
     }
 
     // --- clear / count ---

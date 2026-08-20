@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+- `initHTMLCaching()` and `initVarCaching()` accept an optional third
+  `$maxCacheTime` argument to override the cache lifetime for one call without
+  changing the global setting.
+
 ## [1.0.0] - 2026-08-20
 
 ### Changed
