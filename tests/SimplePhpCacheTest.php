@@ -52,6 +52,36 @@ class SimplePhpCacheTest extends TestCase
         return $cacheSubDir . '/' . urlencode(str_replace('\\', '/', $id)) . '-' . md5($id) . '.cache';
     }
 
+    public function testImplicitDefaultCacheDirectoryTriggersDeprecation(): void
+    {
+        SimplePhpCache::$cacheBaseDir = null;
+        $reportedErrors = [];
+
+        set_error_handler(
+            static function (int $severity, string $message) use (&$reportedErrors): bool {
+                $reportedErrors[] = [$severity, $message];
+                return true;
+            }
+        );
+
+        try {
+            SimplePhpCache::getCacheCount();
+            SimplePhpCache::getCacheCount();
+        } finally {
+            restore_error_handler();
+            SimplePhpCache::$cacheBaseDir = $this->testCacheDir;
+        }
+
+        $this->assertSame(
+            [[
+                E_USER_DEPRECATED,
+                'Using the system temporary directory as the SimplePhpCache cache base directory is deprecated. '
+                . 'Set SimplePhpCache::$cacheBaseDir to an application-owned directory; the implicit default will be removed in 2.0.',
+            ]],
+            $reportedErrors
+        );
+    }
+
     // --- Variable caching ---
 
     public function testVarCachingMissOnFirstCall(): void

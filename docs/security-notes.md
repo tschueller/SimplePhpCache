@@ -13,10 +13,11 @@ They are treated as invalid, deleted, and handled as cache miss.
 ## Cache Directory Permissions (Medium)
 
 The `.simplePhpCache` subdirectory is created with mode `0770` when it does not
-already exist. The default base directory is the system temporary directory.
-On shared systems, another local user could create the cache subdirectory first
-or otherwise control its contents. This can enable cache poisoning and, with
-unsafe filesystem permissions, symlink attacks.
+already exist. The implicit fallback base directory is the system temporary
+directory. Its use emits an `E_USER_DEPRECATED` warning once per request and
+will be removed in version 2.0. On shared systems, another local user could
+create the cache subdirectory first or otherwise control its contents. This can
+enable cache poisoning and, with unsafe filesystem permissions, symlink attacks.
 
 Recommendations:
 
