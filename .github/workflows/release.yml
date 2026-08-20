@@ -1,0 +1,105 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: composer:v2
+
+      - name: Get composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache dependencies
+        uses: actions/cache@v6
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Validate composer
+        run: composer validate --strict
+
+      - name: Run lint
+        run: composer run lint
+
+      - name: Run tests
+        run: composer run test
+
+      - name: Run static analysis
+        run: composer run analyse
+
+      - name: Normalize version for changelog
+        id: version
+        run: echo "clean=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
+
+      - name: Get changelog for current version
+        id: changelog
+        uses: mindsers/changelog-reader-action@v2
+        with:
+          version: ${{ steps.version.outputs.clean }}
+
+      - name: Ensure changelog entry exists
+        run: |
+          if [ -z "${{ steps.changelog.outputs.changes }}" ]; then
+            echo "No changelog entry found for this version!"
+            exit 1
+          fi
+
+      - name: Ensure Unreleased section is empty
+        run: |
+          if ! grep -q '^## \[Unreleased\]' CHANGELOG.md; then
+            echo "Missing [Unreleased] section in CHANGELOG.md!"
+            exit 1
+          fi
+
+          CONTENT=$(awk '
+            /^## \[Unreleased\]$/ { in_unreleased = 1; next }
+            in_unreleased && /^## \[/ { exit }
+            in_unreleased { print }
+          ' CHANGELOG.md | grep -vE '^[[:space:]]*$' || true)
+
+          if [ -n "$CONTENT" ]; then
+            echo "Unreleased section is not empty!"
+            echo "You probably forgot to move entries to the release version."
+            exit 1
+          fi
+
+      - name: Ensure changelog has date for version
+        run: |
+          VERSION="${{ github.ref_name }}"
+          VERSION_CLEAN=${VERSION#v}
+
+          MATCH=$(grep -E "^## \[$VERSION_CLEAN\] - [0-9]{4}-[0-9]{2}-[0-9]{2}" CHANGELOG.md || true)
+
+          if [ -z "$MATCH" ]; then
+            echo "Changelog entry for $VERSION_CLEAN is missing a valid date!"
+            echo "Expected format: ## [$VERSION_CLEAN] - YYYY-MM-DD"
+            exit 1
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          body: ${{ steps.changelog.outputs.changes }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

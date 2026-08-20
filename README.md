@@ -111,9 +111,5 @@ on special characters in prefixes, update your prefix strings accordingly.
 Release Process
 ---------------
 
-When creating a version tag, add a matching section to `CHANGELOG.md` first:
-
-- `## [x.y.z] - YYYY-MM-DD`
-
-This repository includes a GitHub Actions guard that runs on tag pushes and fails
-if the corresponding changelog release section is missing.
+For the release process, versioning rules, changelog requirements, and GitHub
+Actions automation, see [docs/releasing.md](docs/releasing.md).
