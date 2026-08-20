@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-08-20
+
+### Added
+- Optional `$cacheNamespace` setting for safely separating cache entries of
+  multiple applications or tenants below one cache base directory.
+- Migration guide for applications returning from a `PhaseUtils` fork that
+  used `$cacheSubDir`.
+
 ## [1.1.0] - 2026-08-20
 
 ### Added
