@@ -4,10 +4,6 @@ Deferred improvements — implement when explicitly requested or when capacity a
 
 ## v1.x
 
-- **[MEDIUM] Publish to Packagist**
-  Run `composer validate --strict`, submit to packagist.org.
-  Prerequisite: stable tagged 1.0.0 release with namespace.
-
 - **[LOW] Add code coverage reporting to CI (Xdebug/PCOV)**
   Track test coverage over time. Optional quality gate.
 
