@@ -257,7 +257,7 @@ class SimplePhpCache
      * @param string $id
             The cache identifier.
      * @param string $idPrefix
-             The cache identifier prefix.
+            The cache identifier prefix.
      * @throws RuntimeException
      *            When a matching cache file cannot be deleted.
      */
