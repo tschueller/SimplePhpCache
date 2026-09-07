@@ -49,7 +49,7 @@ class SimplePhpCache
      * deleted files. Both id and id prefix are null when the complete cache is
      * cleared. Registering null removes a previously registered callback.
      *
-     * @param callable|null $callback
+     * @param (callable(?string, ?string, int): void)|null $callback
      * @return void
      */
     public static function setAfterCacheClearedCallback(?callable $callback): void

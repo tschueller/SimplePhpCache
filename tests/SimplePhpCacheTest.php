@@ -492,9 +492,11 @@ class SimplePhpCacheTest extends TestCase
     public function testAfterCacheClearedCallbackCanBeRemoved(): void
     {
         $callbackWasCalled = false;
-        SimplePhpCache::setAfterCacheClearedCallback(static function () use (&$callbackWasCalled): void {
-            $callbackWasCalled = true;
-        });
+        SimplePhpCache::setAfterCacheClearedCallback(
+            static function (?string $clearedId, ?string $clearedIdPrefix, int $clearedFileCount) use (&$callbackWasCalled): void {
+                $callbackWasCalled = true;
+            }
+        );
         SimplePhpCache::setAfterCacheClearedCallback(null);
 
         SimplePhpCache::clearCache();
