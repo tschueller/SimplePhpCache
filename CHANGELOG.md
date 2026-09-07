@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+- Optional `setAfterCacheClearedCallback()` hook. The callback receives the
+  deleted cache ID, prefix, and file count after a successful clear operation.
+
+### Changed
+- `clearCache()` throws a `RuntimeException` when a matching cache file cannot
+  be deleted; the optional post-clear callback is then not invoked.
+
 ## [1.2.0] - 2026-08-20
 
 ### Added

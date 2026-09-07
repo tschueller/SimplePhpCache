@@ -10,12 +10,22 @@ SimplePhpCache::$cacheBaseDir = __DIR__;
 // Set the max cache time (if needed). Default is 86400;
 //SimplePhpCache::$maxCacheTime = 86400;
 
+// Register once during application startup. The callback learns whether a
+// single ID, a prefix, or the complete cache was cleared.
+$cacheClearMessage = null;
+SimplePhpCache::setAfterCacheClearedCallback(
+    static function (?string $id, ?string $idPrefix, int $clearedFileCount) use (&$cacheClearMessage): void {
+        $scope = $id !== null
+            ? "cache ID '$id'"
+            : ($idPrefix !== null ? "cache prefix '$idPrefix'" : 'the complete cache');
+        $cacheClearMessage = "Cleared $clearedFileCount file(s) for $scope.";
+    }
+);
+
 // Clear the cache if requested
 if (isset($_REQUEST["clearCache"]))
 {
     SimplePhpCache::clearCache();
-    header("Location: //". $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"]);
-    exit();
 }
 
 ?>
@@ -29,6 +39,9 @@ if (isset($_REQUEST["clearCache"]))
 
     <h1>SimplePhpCache Demo</h1>
     <button onclick="window.location.href=window.location.href+'?clearCache=true'">Clear Cache</button>
+    <?php if ($cacheClearMessage !== null): ?>
+      <p><?=htmlspecialchars($cacheClearMessage, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')?></p>
+    <?php endif; ?>
     <hr/>
 
 <?php
