@@ -17,12 +17,14 @@ class SimplePhpCacheTest extends TestCase
         SimplePhpCache::$cacheBaseDir = $this->testCacheDir;
         SimplePhpCache::$cacheNamespace = null;
         SimplePhpCache::$maxCacheTime = 86400;
+        SimplePhpCache::setAfterCacheClearedCallback(null);
 
         $this->resetStaticState();
     }
 
     protected function tearDown(): void
     {
+        SimplePhpCache::setAfterCacheClearedCallback(null);
         SimplePhpCache::clearCache();
 
         $cacheSubDir = $this->testCacheDir . '/.simplePhpCache';
@@ -426,6 +428,80 @@ class SimplePhpCacheTest extends TestCase
         SimplePhpCache::clearCache(null, 'prefix_');
 
         $this->assertEquals(1, SimplePhpCache::getCacheCount(), 'Only non-prefixed entry should remain');
+    }
+
+    public function testAfterCacheClearedCallbackReceivesTheDeletedId(): void
+    {
+        $id = 'clear_callback_id';
+        $callbackArguments = null;
+
+        SimplePhpCache::initVarCaching($id);
+        SimplePhpCache::setVarCaching($id, 'value');
+        SimplePhpCache::finishVarCaching($id);
+
+        SimplePhpCache::setAfterCacheClearedCallback(
+            static function (?string $clearedId, ?string $clearedIdPrefix, int $clearedFileCount) use (&$callbackArguments): void {
+                $callbackArguments = [$clearedId, $clearedIdPrefix, $clearedFileCount];
+            }
+        );
+
+        SimplePhpCache::clearCache($id);
+
+        $this->assertSame([$id, null, 1], $callbackArguments);
+    }
+
+    public function testAfterCacheClearedCallbackReceivesTheDeletedPrefix(): void
+    {
+        foreach (['callback_prefix_one', 'callback_prefix_two', 'other'] as $id) {
+            SimplePhpCache::initVarCaching($id);
+            SimplePhpCache::setVarCaching($id, $id);
+            SimplePhpCache::finishVarCaching($id);
+            $this->resetStaticState();
+        }
+
+        $callbackArguments = null;
+        SimplePhpCache::setAfterCacheClearedCallback(
+            static function (?string $clearedId, ?string $clearedIdPrefix, int $clearedFileCount) use (&$callbackArguments): void {
+                $callbackArguments = [$clearedId, $clearedIdPrefix, $clearedFileCount];
+            }
+        );
+
+        SimplePhpCache::clearCache(null, 'callback_prefix_');
+
+        $this->assertSame([null, 'callback_prefix_', 2], $callbackArguments);
+    }
+
+    public function testAfterCacheClearedCallbackReceivesAllCacheScope(): void
+    {
+        SimplePhpCache::initVarCaching('callback_all');
+        SimplePhpCache::setVarCaching('callback_all', 'value');
+        SimplePhpCache::finishVarCaching('callback_all');
+
+        $callbackArguments = null;
+        SimplePhpCache::setAfterCacheClearedCallback(
+            static function (?string $clearedId, ?string $clearedIdPrefix, int $clearedFileCount) use (&$callbackArguments): void {
+                $callbackArguments = [$clearedId, $clearedIdPrefix, $clearedFileCount];
+            }
+        );
+
+        SimplePhpCache::clearCache();
+
+        $this->assertSame([null, null, 1], $callbackArguments);
+    }
+
+    public function testAfterCacheClearedCallbackCanBeRemoved(): void
+    {
+        $callbackWasCalled = false;
+        SimplePhpCache::setAfterCacheClearedCallback(
+            static function (?string $clearedId, ?string $clearedIdPrefix, int $clearedFileCount) use (&$callbackWasCalled): void {
+                $callbackWasCalled = true;
+            }
+        );
+        SimplePhpCache::setAfterCacheClearedCallback(null);
+
+        SimplePhpCache::clearCache();
+
+        $this->assertFalse($callbackWasCalled);
     }
 
     public function testGetCacheCountReturnsZeroOnEmptyCache(): void

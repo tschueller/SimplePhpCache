@@ -7,6 +7,7 @@
 
 namespace Tschueller\SimplePhpCache;
 
+use Closure;
 use RuntimeException;
 
 class SimplePhpCache
@@ -37,6 +38,26 @@ class SimplePhpCache
 
     /** The max cache time. */
     public static int $maxCacheTime = 86400;
+
+    /** Optional callback invoked after a cache clear operation succeeds. */
+    private static ?Closure $afterCacheClearedCallback = null;
+
+    /**
+     * Register a callback that is invoked after cache files were cleared.
+     *
+     * The callback receives the effective cache id, id prefix, and number of
+     * deleted files. Both id and id prefix are null when the complete cache is
+     * cleared. Registering null removes a previously registered callback.
+     *
+     * @param (callable(?string, ?string, int): void)|null $callback
+     * @return void
+     */
+    public static function setAfterCacheClearedCallback(?callable $callback): void
+    {
+        self::$afterCacheClearedCallback = $callback === null
+            ? null
+            : Closure::fromCallable($callback);
+    }
 
     /**
      * Start the HTML output caching.
@@ -237,20 +258,36 @@ class SimplePhpCache
             The cache identifier.
      * @param string $idPrefix
             The cache identifier prefix.
+     * @throws RuntimeException
+     *            When a matching cache file cannot be deleted.
      */
     public static function clearCache(?string $id = null, ?string $idPrefix = null): void
     {
         if ($id) {
             $pattern = self::getFilename($id);
+            $callbackId = $id;
+            $callbackIdPrefix = null;
         } else if ($idPrefix) {
-            $pattern = self::sanitizeIdPrefix($idPrefix) . "*.cache";
+            $callbackIdPrefix = self::sanitizeIdPrefix($idPrefix);
+            $pattern = $callbackIdPrefix . "*.cache";
+            $callbackId = null;
         } else {
             $pattern = "*.cache";
+            $callbackId = null;
+            $callbackIdPrefix = null;
         }
         $cacheDir = self::getCacheDir();
         $scanResult = glob($cacheDir . "/" . $pattern) ?: [];
+        $clearedFileCount = 0;
         foreach ($scanResult as $fileName) {
-            unlink($fileName);
+            if (!unlink($fileName)) {
+                throw new RuntimeException("Error clearing cache file: '$fileName'");
+            }
+            $clearedFileCount++;
+        }
+
+        if (self::$afterCacheClearedCallback !== null) {
+            (self::$afterCacheClearedCallback)($callbackId, $callbackIdPrefix, $clearedFileCount);
         }
     }
 

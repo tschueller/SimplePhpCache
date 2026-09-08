@@ -75,6 +75,22 @@ Clear all cache files
 
 	SimplePhpCache::clearCache();
 
+Optionally register a callback once during application startup. It receives the
+cleared cache ID, cleared prefix, and number of deleted files. ID and prefix
+are both `null` when the complete cache is cleared:
+
+	SimplePhpCache::setAfterCacheClearedCallback(
+		static function (?string $id, ?string $idPrefix, int $clearedFileCount): void {
+			// Clear a related application cache or write an audit log.
+		}
+	);
+
+Pass `null` to `setAfterCacheClearedCallback()` to remove the callback. The
+callback is invoked only after all matching cache files were deleted. If it
+throws an exception, the cache has already been cleared and the exception is
+passed to the caller. If a matching cache file cannot be deleted,
+`clearCache()` throws a `RuntimeException` and does not invoke the callback.
+
 To refresh a special cache file, set in the init method as the second parameter **true**
 
 	// HTML
