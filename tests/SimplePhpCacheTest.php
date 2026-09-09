@@ -15,6 +15,7 @@ class SimplePhpCacheTest extends TestCase
         mkdir($this->testCacheDir, 0770, true);
 
         SimplePhpCache::$cacheBaseDir = $this->testCacheDir;
+        SimplePhpCache::$cacheDirectoryName = '.simplePhpCache';
         SimplePhpCache::$cacheNamespace = null;
         SimplePhpCache::$maxCacheTime = 86400;
         SimplePhpCache::setAfterCacheClearedCallback(null);
@@ -27,7 +28,7 @@ class SimplePhpCacheTest extends TestCase
         SimplePhpCache::setAfterCacheClearedCallback(null);
         SimplePhpCache::clearCache();
 
-        $cacheSubDir = $this->testCacheDir . '/.simplePhpCache';
+        $cacheSubDir = $this->testCacheDir . '/' . SimplePhpCache::$cacheDirectoryName;
         foreach (glob($cacheSubDir . '/*') ?: [] as $file) {
             if (is_dir($file)) {
                 foreach (glob($file . '/*') ?: [] as $namespacedFile) {
@@ -46,6 +47,7 @@ class SimplePhpCacheTest extends TestCase
         }
 
         SimplePhpCache::$cacheBaseDir = null;
+        SimplePhpCache::$cacheDirectoryName = '.simplePhpCache';
         SimplePhpCache::$cacheNamespace = null;
     }
 
@@ -59,8 +61,39 @@ class SimplePhpCacheTest extends TestCase
 
     private function getCacheFilePathForId(string $id): string
     {
-        $cacheSubDir = $this->testCacheDir . '/.simplePhpCache';
+        $cacheSubDir = $this->testCacheDir . '/' . SimplePhpCache::$cacheDirectoryName;
         return $cacheSubDir . '/' . urlencode(str_replace('\\', '/', $id)) . '-' . md5($id) . '.cache';
+    }
+
+    public function testCacheDirectoryNameUsesConfiguredDirectory(): void
+    {
+        SimplePhpCache::$cacheDirectoryName = '.cache';
+        $id = 'custom_directory';
+
+        SimplePhpCache::initVarCaching($id);
+        SimplePhpCache::setVarCaching($id, 'cached value');
+        SimplePhpCache::finishVarCaching($id);
+
+        $this->assertFileExists($this->getCacheFilePathForId($id));
+        $this->assertFalse(SimplePhpCache::initVarCaching($id));
+        $this->assertSame('cached value', SimplePhpCache::finishVarCaching($id));
+    }
+
+    public function testCacheDirectoryNameRejectsUnsafePath(): void
+    {
+        SimplePhpCache::$cacheDirectoryName = '../cache';
+
+        try {
+            SimplePhpCache::getCacheCount();
+            $this->fail('Expected invalid cache directory name to be rejected.');
+        } catch (RuntimeException $exception) {
+            $this->assertStringContainsString(
+                'Cache directory name must be a single directory name',
+                $exception->getMessage()
+            );
+        } finally {
+            SimplePhpCache::$cacheDirectoryName = '.simplePhpCache';
+        }
     }
 
     public function testImplicitDefaultCacheDirectoryTriggersDeprecation(): void

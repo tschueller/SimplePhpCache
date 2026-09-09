@@ -26,6 +26,16 @@ Set the cache base directory (required for production):
 
 	SimplePhpCache::$cacheBaseDir = __DIR__ . "/var/cache";
 
+By default, cache files are stored below `<cacheBaseDir>/.simplePhpCache`. To
+use an existing application-owned cache directory name, configure one safe
+directory name before using the cache:
+
+	SimplePhpCache::$cacheDirectoryName = ".cache";
+
+The default remains `.simplePhpCache`. The directory name may contain letters,
+numbers, dots, hyphens, and underscores, but no path separators, spaces, empty
+value, or the path segments `.` and `..`.
+
 Optionally set a namespace to keep cache entries for several applications or
 tenants separate below the same base directory:
 

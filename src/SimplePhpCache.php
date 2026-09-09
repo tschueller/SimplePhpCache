@@ -15,6 +15,9 @@ class SimplePhpCache
     /** Prefix marker for JSON variable cache payloads. */
     private const VAR_CACHE_PREFIX = "SPCJSON1:";
 
+    /** Default directory name used below the configured cache base directory. */
+    private const DEFAULT_CACHE_DIRECTORY_NAME = ".simplePhpCache";
+
      /** Cache id from the current started cache. */
     private static ?string $startedCache = null;
 
@@ -26,6 +29,12 @@ class SimplePhpCache
 
     /** The cache base directory. */
     public static ?string $cacheBaseDir = null;
+
+    /**
+     * Cache directory name used below the configured cache base directory.
+     * Must be a single safe directory name.
+     */
+    public static string $cacheDirectoryName = self::DEFAULT_CACHE_DIRECTORY_NAME;
 
     /**
      * Optional namespace used to separate cache files below the cache directory.
@@ -454,7 +463,8 @@ class SimplePhpCache
      */
     private static function getCacheDir(): string
     {
-       if (self::$cacheBaseDir == null) {
+        $cacheBaseDir = self::$cacheBaseDir;
+        if ($cacheBaseDir === null) {
             if (!self::$defaultCacheDirectoryDeprecationReported) {
                 trigger_error(
                     'Using the system temporary directory as the SimplePhpCache cache base directory is deprecated. '
@@ -463,9 +473,11 @@ class SimplePhpCache
                 );
                 self::$defaultCacheDirectoryDeprecationReported = true;
             }
-            self::$cacheBaseDir = sys_get_temp_dir();
+            $cacheBaseDir = sys_get_temp_dir();
+            self::$cacheBaseDir = $cacheBaseDir;
         }
-        $dir = self::fixPath(self::$cacheBaseDir) . "/.simplePhpCache";
+        self::validateCacheDirectoryName(self::$cacheDirectoryName);
+        $dir = self::fixPath($cacheBaseDir) . "/" . self::$cacheDirectoryName;
         if (self::$cacheNamespace !== null) {
             self::validateCacheNamespace(self::$cacheNamespace);
             $dir .= "/" . self::$cacheNamespace;
@@ -487,6 +499,21 @@ class SimplePhpCache
         if (preg_match('/^[A-Za-z0-9_-][A-Za-z0-9._-]*$/', $namespace) !== 1) {
             throw new RuntimeException(
                 "Cache namespace must be a single directory name containing only letters, numbers, dots, hyphens, or underscores"
+            );
+        }
+    }
+
+    /**
+     * Validate that a cache directory name cannot alter the configured cache path.
+     *
+     * @param string $directoryName
+     * @throws RuntimeException
+     */
+    private static function validateCacheDirectoryName(string $directoryName): void
+    {
+        if (preg_match('/^(?!\.{1,2}$)[A-Za-z0-9._-]+$/', $directoryName) !== 1) {
+            throw new RuntimeException(
+                "Cache directory name must be a single directory name containing only letters, numbers, dots, hyphens, or underscores"
             );
         }
     }
