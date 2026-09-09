@@ -52,3 +52,21 @@ If `$cacheSubDir` was absent, empty, or `.simplePhpCache`, do not set
 dots, hyphens, and underscores, but no path separators, spaces, `..`, or empty
 value. Replace nested or path-like old values with one namespace; the cache is
 then regenerated in the new location.
+
+## From a PhumbUtils fork using `.cache` as the cache directory name
+
+If the application cache base directory already contains an application-owned
+`.cache` directory, configure it explicitly:
+
+```php
+// PhumbUtils fork
+Cache::$cacheBaseDir = __DIR__ . '/var/cache';
+Cache::$cacheDirectoryName = '.cache';
+```
+
+This changes only the subdirectory name; the default remains
+`<cacheBaseDir>/.simplePhpCache`. The directory name is validated as one safe
+path segment, so it cannot contain path separators, spaces, be empty, or equal
+`.` or `..`.
+
+

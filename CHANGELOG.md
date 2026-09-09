@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+- Optional `$cacheDirectoryName` setting for choosing the safe cache
+  subdirectory below `$cacheBaseDir`; it defaults to `.simplePhpCache`.
+
 ## [1.3.0] - 2026-09-08
 
 ### Added
