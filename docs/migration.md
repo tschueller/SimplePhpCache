@@ -53,20 +53,22 @@ dots, hyphens, and underscores, but no path separators, spaces, `..`, or empty
 value. Replace nested or path-like old values with one namespace; the cache is
 then regenerated in the new location.
 
-## From a PhumbUtils fork using `.cache` as the cache directory name
+## From a PhumbUtils\Cache fork
 
-If the application cache base directory already contains an application-owned
-`.cache` directory, configure it explicitly:
+Replace `PhumbUtils\Cache` with
+`Tschueller\SimplePhpCache\SimplePhpCache` (or create a facade) and configure the existing cache
+base directory and its `.cache` subdirectory:
 
 ```php
-// PhumbUtils fork
-Cache::$cacheBaseDir = __DIR__ . '/var/cache';
-Cache::$cacheDirectoryName = '.cache';
+use Tschueller\SimplePhpCache\SimplePhpCache;
+
+SimplePhpCache::$cacheBaseDir = Config::getCustomCacheDir()
+    ?? Config::getThumbImagesBaseDir();
+SimplePhpCache::$cacheDirectoryName = '.cache';
+SimplePhpCache::$maxCacheTime = Config::getMaxCacheTime();
 ```
 
-This changes only the subdirectory name; the default remains
-`<cacheBaseDir>/.simplePhpCache`. The directory name is validated as one safe
-path segment, so it cannot contain path separators, spaces, be empty, or equal
-`.` or `..`.
-
-
+This keeps HTML cache entries below `<cacheBaseDir>/.cache` available when their
+cache IDs are unchanged. Serialized variable-cache files are deliberately not
+deserialized; they are treated as cache misses and recreated with the current
+JSON format.
