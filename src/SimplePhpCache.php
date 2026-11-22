@@ -268,7 +268,7 @@ class SimplePhpCache
      * @param string $idPrefix
             The cache identifier prefix.
      * @throws RuntimeException
-     *            When a matching cache file cannot be deleted.
+     *            When a matching cache entry still exists after a failed deletion.
      */
     public static function clearCache(?string $id = null, ?string $idPrefix = null): void
     {
@@ -289,10 +289,18 @@ class SimplePhpCache
         $scanResult = glob($cacheDir . "/" . $pattern) ?: [];
         $clearedFileCount = 0;
         foreach ($scanResult as $fileName) {
-            if (!unlink($fileName)) {
+            if (@unlink($fileName)) {
+                $clearedFileCount++;
+                continue;
+            }
+
+            // Another request may have removed the entry after glob listed it.
+            // Refresh cached metadata and retain errors for entries still present,
+            // including dangling symbolic links that file_exists() cannot detect.
+            clearstatcache(true, $fileName);
+            if (file_exists($fileName) || is_link($fileName)) {
                 throw new RuntimeException("Error clearing cache file: '$fileName'");
             }
-            $clearedFileCount++;
         }
 
         if (self::$afterCacheClearedCallback !== null) {

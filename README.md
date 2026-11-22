@@ -96,10 +96,12 @@ are both `null` when the complete cache is cleared:
 	);
 
 Pass `null` to `setAfterCacheClearedCallback()` to remove the callback. The
-callback is invoked only after all matching cache files were deleted. If it
-throws an exception, the cache has already been cleared and the exception is
-passed to the caller. If a matching cache file cannot be deleted,
-`clearCache()` throws a `RuntimeException` and does not invoke the callback.
+callback is invoked only after all matching cache entries have been removed.
+Files already removed by another request are tolerated and do not contribute
+to the deleted-file count. If the callback throws an exception, the cache files
+remain deleted and the exception is passed to the caller. If a matching entry
+still exists after a failed deletion, `clearCache()` throws a `RuntimeException`
+and does not invoke the callback.
 
 To refresh a special cache file, set in the init method as the second parameter **true**
 

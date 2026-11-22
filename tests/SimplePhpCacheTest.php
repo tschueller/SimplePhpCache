@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\PreserveGlobalState;
+use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
 use Tschueller\SimplePhpCache\SimplePhpCache;
 
@@ -461,6 +464,72 @@ class SimplePhpCacheTest extends TestCase
         SimplePhpCache::clearCache(null, 'prefix_');
 
         $this->assertEquals(1, SimplePhpCache::getCacheCount(), 'Only non-prefixed entry should remain');
+    }
+
+    /** @return array<string, array{?string, ?string, int, int}> */
+    public static function concurrentClearScopes(): array
+    {
+        return [
+            'all files' => [null, null, 2, 0],
+            'single id' => ['race_a', null, 0, 2],
+            'id prefix' => [null, 'race_', 1, 1],
+        ];
+    }
+
+    #[DataProvider('concurrentClearScopes')]
+    #[RunInSeparateProcess]
+    #[PreserveGlobalState(false)]
+    public function testClearCacheToleratesFilesRemovedAfterListing(
+        ?string $id,
+        ?string $idPrefix,
+        int $expectedDeletedCount,
+        int $expectedRemainingCount
+    ): void {
+        foreach (['race_a', 'race_b', 'unrelated'] as $cacheId) {
+            SimplePhpCache::initVarCaching($cacheId);
+            SimplePhpCache::setVarCaching($cacheId, 'value');
+            SimplePhpCache::finishVarCaching($cacheId);
+        }
+        $callbackArguments = null;
+        SimplePhpCache::setAfterCacheClearedCallback(
+            static function (?string $clearedId, ?string $clearedPrefix, int $count) use (&$callbackArguments): void {
+                $callbackArguments = [$clearedId, $clearedPrefix, $count];
+            }
+        );
+
+        // Override glob only in this child process to reproduce a stale listing
+        // deterministically, without timing-dependent concurrent workers.
+        require __DIR__ . '/fixtures/cache-clear-stale-listing.php';
+        SimplePhpCache::clearCache($id, $idPrefix);
+
+        $this->assertSame([$id, $idPrefix, $expectedDeletedCount], $callbackArguments);
+        $remainingFiles = glob($this->testCacheDir . '/.simplePhpCache/*.cache') ?: [];
+        $this->assertCount($expectedRemainingCount, $remainingFiles);
+    }
+
+    public function testClearCacheStillThrowsWhenAnEntryCannotBeRemoved(): void
+    {
+        SimplePhpCache::getCacheCount();
+        $entry = str_replace('\\', '/', $this->getCacheFilePathForId('undeletable'));
+        // A directory cannot be removed with unlink on Windows or Unix.
+        $this->assertTrue(mkdir($entry));
+        $callbackWasCalled = false;
+        SimplePhpCache::setAfterCacheClearedCallback(
+            static function () use (&$callbackWasCalled): void {
+                $callbackWasCalled = true;
+            }
+        );
+
+        try {
+            SimplePhpCache::clearCache();
+            $this->fail('Expected the remaining cache entry to cause an exception.');
+        } catch (RuntimeException $exception) {
+            $this->assertSame("Error clearing cache file: '$entry'", $exception->getMessage());
+            $this->assertDirectoryExists($entry);
+            $this->assertFalse($callbackWasCalled);
+        } finally {
+            rmdir($entry);
+        }
     }
 
     public function testAfterCacheClearedCallbackReceivesTheDeletedId(): void

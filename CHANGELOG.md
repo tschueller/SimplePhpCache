@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [1.4.1] - 2026-11-22
+
+### Fixed
+- `clearCache()` tolerates cache files removed by another request after the
+  directory listing, avoiding spurious warnings and exceptions. Entries that
+  remain after a failed deletion still cause an exception, and the callback
+  counts only files deleted by the current call.
+
 ## [1.4.0] - 2026-09-10
 
 ### Added
